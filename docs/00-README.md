@@ -26,6 +26,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `12-evaluation-and-simulation-suite.md` | Test suite, Truth board vs Sandbox dashboards, simulator, sort keys |
 | `13-signal-to-asset-mapping.md` | How a repo signal might map to a tradable asset, evidence, kill tests, tool-radar fallback |
 | `14-data-collection-deep-dive.md` | Audit of the data plan for the Reddit-history scope, leakage issues, adjustable-input design, revised stage order |
+| `15-finding-high-value-positives.md` | Outcome-first search for strong positive cases, survivorship controls, gold-set tiers, literature on Reddit signals |
 
 ## Reading order
 
