@@ -54,3 +54,30 @@ Inside the $200 build budget (`10`) in all three cases. The high case is mostly 
 ## Open item: laptop disk
 
 I measured about 3 GB free on C: earlier today (472 GB used), and only the C: drive was listed. If you have more space elsewhere (another drive, an external disk), tell me the path and I will re-check. Even with room for a month of data, the full ingest is faster and safer on a VM with a clean volume, and it is cheap.
+
+## Per-subreddit option (explored October 13, 2026)
+
+Three ways to get only our subs instead of the 3.8 TB archive. Sources: the Arctic Shift API page, its download tool page, and a Reddit post about the top-40k release, all read today. Sizes marked (unverified) were not found.
+
+| Route | What it is | Covers | Limits and unknowns |
+|---|---|---|---|
+| **A. Top-40k per-subreddit torrent** (Watchful1, Academic Torrents) | One submissions file and one comments file per subreddit, zstd NDJSON. Pick individual files in the torrent client | 2005-06 to 2023-12 | The whole set is about 2.5 TB per a library listing (unverified), so the point is to select only our files. Per-sub sizes not found. Subs outside the top 40k are missing (check mcp, OpenWebUI, smallcapstocks) |
+| **B. Arctic Shift API** | `GET /api/posts/search` and `/api/comments/search` with `subreddit`, `after`, `before`, `limit` (up to 100, or `auto` up to 1000), `sort`, `fields`. No auth documented | Rolling, including 2024 to now | No fixed rate limit (dynamic, 429 plus reset headers). The docs say to use dumps for massive volumes. Text-field queries can time out. No cursor, so page with `after` and `sort=asc`. Scores and comment counts settle after about 36 hours |
+| **C. Arctic Shift download tool (web)** | Enter subreddit or user, choose posts and/or comments, set start and end dates | Any range | Output format and limits are not described. Fine for one-off checks and for R0, not for automation |
+
+### Recommendation
+
+1. **R0 now, tiny:** use route C or B for one month of two or three wave-1 subs (for example r/mcp and r/ValueInvesting). That is megabytes, needs no VM, and fits the 3 GB disk. It answers the schema, field-semantics, and link-share questions.
+2. **Backfill 2005 to 2023-12:** route A, selecting only the submissions files for wave-1 subs (and their comments later). Expected total is single-digit to low tens of GB (assumption). Run on the VM if the laptop lacks room.
+3. **2024 to now:** route B per sub in date slices, polite request rate, retrying on 429 using the reset header. A few hundred requests per sub at most (assumption).
+
+### Effect on cost
+
+| | Previous estimate | With per-subreddit routes |
+|---|---|---|
+| Ingest compute | $5 likely | $0 to $3 |
+| Scratch volume | $10 likely | $0 to $3 (tens of GB, or none if the laptop has room) |
+| Download time | Days | Hours |
+| Revised build total, likely | about $54 | **about $30** (GH Archive scans and LLM batch now dominate) |
+
+Caveats: a per-subreddit pull gives posts in the subs we chose, so cross-sub first-seen time (B4) and user-activity features (E4 to E7, which need a user's activity in other subs) will be limited to the pulled set. `14` already notes this bias. We can add a user-history pull from route B later for authors who appear in positive and matched-negative posts, which is a small number of users.
