@@ -4,6 +4,8 @@ Rewritten October 13, 2026 for the reframed scope (`01`). Thresholds marked (pla
 
 ## Where things run
 
+> Updated October 13, 2026: laptop-first with cloud overflow. See `18`. The VPS description below is the earlier default.
+
 - **Laptop:** development, Claude Code, review, dashboards.
 - **Paid VPS:** all scheduled collectors and the warehouse. Scripts only, no LLM agent on the server.
 - **Heavy bulk work:** GH Archive history is large. Prefer running filters as queries (Google BigQuery's public GH Archive dataset, free monthly query allowance, verify) or streaming hourly files and keeping only reduced Parquet. Do not store raw dumps on a 40 GB disk.

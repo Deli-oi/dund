@@ -80,6 +80,11 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 - Target: a financial logistic model mapping posts to market shifts as early indicators. Weighting standard and voter priors are in `17`.
 - Dataset: Arctic Shift (GitHub `ArthurHeitmann/arctic_shift`, torrents on Academic Torrents, about 3.8 TB for 2005 to 2025-12). Not downloaded; filter by subreddit and month (`17`).
 
+## Compute and output (October 13, 2026)
+
+- Everything runs on the current laptop; cloud only for what it cannot hold (bulk ingest, scheduled collectors). The laptop has about 3 GB free disk, so bulk data is cloud-side and out of Dropbox (`18`).
+- Final output: a report of what to do with a confidence score defined as the margin above the decision threshold (`18`).
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.

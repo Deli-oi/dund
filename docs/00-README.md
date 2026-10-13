@@ -29,6 +29,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `15-finding-high-value-positives.md` | Outcome-first search for strong positive cases, survivorship controls, gold-set tiers, literature on Reddit signals |
 | `16-post-first-data-model.md` | Post as the input row, entity outcomes attached, impact score and per-row confidence |
 | `17-market-target-weighting.md` | Market-shift standard, voter weights, per-example weights, and the Arctic Shift data source |
+| `18-compute-and-report-output.md` | Laptop-first compute with cloud overflow, laptop disk limits, and the margin-over-threshold report |
 
 ## Reading order
 
