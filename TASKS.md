@@ -20,6 +20,12 @@ Status legend: [ ] todo, [x] done. Gate means stop and ask Eli.
 - [ ] Update `docs/08` items 34, 35, 36, 37, 40 only after Eli has read them (ask first).
 - Done when: no doc describes Reddit training as current, banners removed.
 
+### T1b. Data collection deep dive follow-ups (`docs/14`)
+- [ ] R0: profile one month of the Reddit repo (schema, coverage, field semantics, size). Needs the repo URL.
+- [ ] R1-R3: mention extraction, repo id resolution, first-mention table, entity audit on 100 links.
+- [ ] Add the feature registry and run manifests (data snapshot ids, code SHA).
+- Done when: profile and audit reviewed by Eli, and the cohort choice (A or B) is decided.
+
 ### T2. Evaluation harness on synthetic data (phase 0b, no real data needed)
 - [ ] Synthetic generator with a planted signal, label noise, and optional leakage. See `docs/12`.
 - [ ] Tests: leakage detection (label-side feature fails the build), label-permutation test (AUC near 0.5), random-feature control, planted-signal recovery, label-noise robustness, walk-forward split with purge and embargo, calibration check (Brier), block bootstrap.
