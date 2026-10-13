@@ -12,7 +12,7 @@ Status legend: [ ] todo, [x] done. Gate means stop and ask Eli.
 ## Agent queue
 
 ### T0. Set up the repo
-- [ ] `git init`, create venv, `pip install -e .[dev]`, run tests (ledger tests should pass).
+- [x] `git init`, venv outside Dropbox (`C:\Users\dalele\venvs\dund`), `pip install -e .[dev]`, 9 tests pass. Ledger, confidence, and report modules and `scripts/r0_profile.py` exist.
 - Done when: tests pass on the laptop.
 
 ### T1. Clean the docs for the new scope
