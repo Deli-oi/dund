@@ -89,6 +89,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - About 60 candidate variables in 7 feature groups, user types as behavioral archetypes, a wider subreddit scan list (finance, tech, company, science), and defaults for the open items. All in `19`.
 
+## Subreddit waves (October 13, 2026)
+
+- Scan in waves by a scored prior, not all 86 at once. Wave 1 is about 23 subs plus controls. More waves are added only if projected data is short. Scores are priors until R0 counts exist. See `20`.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.

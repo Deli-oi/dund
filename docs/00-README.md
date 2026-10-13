@@ -31,6 +31,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `17-market-target-weighting.md` | Market-shift standard, voter weights, per-example weights, and the Arctic Shift data source |
 | `18-compute-and-report-output.md` | Laptop-first compute with cloud overflow, laptop disk limits, and the margin-over-threshold report |
 | `19-variable-catalog.md` | About 60 candidate variables, user archetypes, subreddit scan list, open-item decisions |
+| `20-subreddit-prioritization.md` | Scored ranking of the 86 candidate subs, waves, data-need math, override rules |
 
 ## Reading order
 
