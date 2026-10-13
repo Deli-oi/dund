@@ -32,6 +32,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `18-compute-and-report-output.md` | Laptop-first compute with cloud overflow, laptop disk limits, and the margin-over-threshold report |
 | `19-variable-catalog.md` | About 60 candidate variables, user archetypes, subreddit scan list, open-item decisions |
 | `20-subreddit-prioritization.md` | Scored ranking of the 86 candidate subs, waves, data-need math, override rules |
+| `21-cost-estimate.md` | Total build and recurring cost ranges, cost drivers |
 
 ## Reading order
 

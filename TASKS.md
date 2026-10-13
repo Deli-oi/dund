@@ -27,6 +27,7 @@ Status legend: [ ] todo, [x] done. Gate means stop and ask Eli.
 - Done when: profile and audit reviewed by Eli, and the cohort choice (A or B) is decided.
 
 ### T1c. Post-first schema and confidence (`docs/16`)
+- **On hold until the R0 profile has been read with Eli.** Do not build converters before looking at the data.
 - [ ] Post table with entity list, voters, `p`, `c`, `label_version`; confidence factors as pure functions with tests.
 - [ ] Decide multi-entity rule and type C handling (Eli).
 - Done when: schema and tests pass on synthetic data.
