@@ -85,6 +85,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 - Everything runs on the current laptop; cloud only for what it cannot hold (bulk ingest, scheduled collectors). The laptop has about 3 GB free disk, so bulk data is cloud-side and out of Dropbox (`18`).
 - Final output: a report of what to do with a confidence score defined as the margin above the decision threshold (`18`).
 
+## Variables, subs, and open-item defaults (October 13, 2026)
+
+- About 60 candidate variables in 7 feature groups, user types as behavioral archetypes, a wider subreddit scan list (finance, tech, company, science), and defaults for the open items. All in `19`.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
