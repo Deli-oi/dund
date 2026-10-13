@@ -20,6 +20,8 @@ The old runbook was built repo-first (GH Archive finds emerging repos, Reddit is
 
 ## 2. Changes to candidate generation
 
+> Updated: `16` makes the post the input row. R1 to R5 below still apply as the entity-resolution and outcome steps, but their output attaches to posts rather than defining the rows.
+
 Old: GH Archive finds repos with at least 5 stars in 30 days (S1). Problem: that filter uses information after the mention and selects on the outcome.
 
 New:

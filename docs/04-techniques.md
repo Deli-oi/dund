@@ -6,6 +6,8 @@ Regularized logistic regression, `P(success) = sigmoid(w . x)`, where `x` is onl
 
 ## Unit of analysis
 
+**Updated October 13, 2026: the post is the unit and entities are attached to it (`16`).** The text below is the earlier entity-first wording.
+
 The unit is the thing a post mentions (a repo, ticker, coin, or tool), and the label is that entity's later outcome. Score **every mention**, including the ones that went nowhere, because negatives teach the model what a dud looks like. For credit, first mention only is cleaner and matches the "catch it early" goal.
 
 ### Entity resolution (default)

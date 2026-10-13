@@ -71,6 +71,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 - Agent runs follow stages S0-S9 with human gates G0-G4 and a spend gate at 80% (`11`).
 - Options are not in the POC (default).
 
+## Input point and confidence (new, October 13, 2026)
+
+- The **post** is the input row, with repos and other entities checked along the way when mentioned. Each post gets an impact label `p` and a confidence `c = decisiveness x evidence quality`, and training weight uses `c`. Spec in `16`. Supersedes the repo-first framing in `14` section 2.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.

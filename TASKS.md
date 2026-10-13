@@ -26,6 +26,11 @@ Status legend: [ ] todo, [x] done. Gate means stop and ask Eli.
 - [ ] Add the feature registry and run manifests (data snapshot ids, code SHA).
 - Done when: profile and audit reviewed by Eli, and the cohort choice (A or B) is decided.
 
+### T1c. Post-first schema and confidence (`docs/16`)
+- [ ] Post table with entity list, voters, `p`, `c`, `label_version`; confidence factors as pure functions with tests.
+- [ ] Decide multi-entity rule and type C handling (Eli).
+- Done when: schema and tests pass on synthetic data.
+
 ### T2. Evaluation harness on synthetic data (phase 0b, no real data needed)
 - [ ] Synthetic generator with a planted signal, label noise, and optional leakage. See `docs/12`.
 - [ ] Tests: leakage detection (label-side feature fails the build), label-permutation test (AUC near 0.5), random-feature control, planted-signal recovery, label-noise robustness, walk-forward split with purge and embargo, calibration check (Brier), block bootstrap.
