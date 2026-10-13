@@ -21,7 +21,7 @@ Status legend: [ ] todo, [x] done. Gate means stop and ask Eli.
 - Done when: no doc describes Reddit training as current, banners removed.
 
 ### T1b. Data collection deep dive follow-ups (`docs/14`)
-- [ ] R0: profile one month of the Reddit repo (schema, coverage, field semantics, size). Needs the repo URL.
+- [ ] R0: profile one month of the Arctic Shift data (schema, coverage, field semantics, size). Source in `docs/17`; confirm with Eli where to store it before any download.
 - [ ] R1-R3: mention extraction, repo id resolution, first-mention table, entity audit on 100 links.
 - [ ] Add the feature registry and run manifests (data snapshot ids, code SHA).
 - Done when: profile and audit reviewed by Eli, and the cohort choice (A or B) is decided.

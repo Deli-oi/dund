@@ -75,6 +75,11 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - The **post** is the input row, with repos and other entities checked along the way when mentioned. Each post gets an impact label `p` and a confidence `c = decisiveness x evidence quality`, and training weight uses `c`. Spec in `16`. Supersedes the repo-first framing in `14` section 2.
 
+## Target and data source (October 13, 2026)
+
+- Target: a financial logistic model mapping posts to market shifts as early indicators. Weighting standard and voter priors are in `17`.
+- Dataset: Arctic Shift (GitHub `ArthurHeitmann/arctic_shift`, torrents on Academic Torrents, about 3.8 TB for 2005 to 2025-12). Not downloaded; filter by subreddit and month (`17`).
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.

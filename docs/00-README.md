@@ -28,6 +28,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `14-data-collection-deep-dive.md` | Audit of the data plan for the Reddit-history scope, leakage issues, adjustable-input design, revised stage order |
 | `15-finding-high-value-positives.md` | Outcome-first search for strong positive cases, survivorship controls, gold-set tiers, literature on Reddit signals |
 | `16-post-first-data-model.md` | Post as the input row, entity outcomes attached, impact score and per-row confidence |
+| `17-market-target-weighting.md` | Market-shift standard, voter weights, per-example weights, and the Arctic Shift data source |
 
 ## Reading order
 
