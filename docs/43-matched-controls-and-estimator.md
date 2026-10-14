@@ -56,3 +56,7 @@ Null world: 30 tickers, 250 days, no flagged edge, a market-wide weekly shock (s
 | Ticker-only | 0.340 | 0.311 to 0.369 |
 
 The test asserts two-way within [0.01, 0.08] and ticker-only above 0.08. Caveat: the world has only 8 flag weeks, so the result depends on that count; with fewer distinct flag weeks the bound is still expected to be loose.
+
+## Momentum eligibility gate (D4, docs/38 F4)
+
+A flagged (or event) day, and every control, is eligible only if its trailing 5-trading-day abnormal return versus the benchmark (ending at the last close at or before decision time, rows strictly before the entry close) lies within +/- 2 SD, where SD is that of non-overlapping 5-day abnormal returns of the same ticker over the preceding 252 trading days. Status is `pass`, `out` or `unknown`; `unknown` (insufficient history or missing benchmark) is ineligible and reported separately. Note: 252 days hold only about 50 non-overlapping blocks, so "at least 60 observations" is implemented as at least 60 trading days of history and 11 prior blocks. `momentum_gate=True` is the default of `match_controls`, `match_all` and `run_estimand`; results carry `gate` counts (flagged_out, flagged_unknown, control_out, control_unknown), and gated flagged days appear in `unmatched` as `gate_out` / `gate_unknown`. Tests: run-up gated out, quiet drift passes, no look-ahead, short history unknown.

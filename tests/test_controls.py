@@ -9,7 +9,7 @@ import pytest
 from dund import labels
 from dund.controls import (COST, Cand, Table, balance_report, boot_estimate, build_table,
                            decision_ts, features_at, holm, match_all, match_controls,
-                           net_outcomes)
+                           momentum_gate, net_outcomes)
 from dund.labels import PriceSeries
 from dund.sealed import UNSEAL_TOKEN
 
@@ -209,3 +209,47 @@ def test_run_estimand_smoke(tmp_path, capsys):
     assert [r["window"] for r in res] == [5, 10, 21]
     assert all("p_holm" in r for r in res)
     assert "AAA" not in capsys.readouterr().out.replace("no_series", "")
+
+
+# ---------------- momentum gate ----------------
+
+def _gate_world(runup=0.0, at=150, n=260):
+    r = random.Random(11)
+    ds = _weekdays(date(2024, 1, 2), n)
+    ar = [0.0] + [r.gauss(0, 0.01) for _ in range(n - 1)]
+    for k in range(1, 6):          # run-up over the 5 closes before entry `at`
+        ar[at - k] += runup / 5
+    px = [100.0]
+    for i in range(1, n):
+        px.append(px[-1] * (1 + ar[i]))
+    flat = [100.0] * n
+    return (PriceSeries("AAA", ds, px, px, [2e6] * n),
+            {"market": PriceSeries("SPY", ds, flat, flat, [1e7] * n)})
+
+
+def test_gate_runup_out_quiet_passes():
+    ps, b = _gate_world(runup=0.4)
+    assert momentum_gate(ps, b, 150) == "out"
+    ps, b = _gate_world(runup=0.0)
+    assert momentum_gate(ps, b, 150) == "pass"
+
+
+def test_gate_no_lookahead():
+    ps, b = _gate_world(runup=0.4)
+    base = momentum_gate(ps, b, 150)
+    ps2 = PriceSeries("AAA", ps.dates, list(ps.close), list(ps.adj_close), list(ps.volume))
+    for j in range(150, len(ps2)):
+        ps2.adj_close[j] *= 3.0
+    assert momentum_gate(ps2, b, 150) == base
+
+
+def test_gate_unknown_and_counts():
+    ps, b = _gate_world()
+    assert momentum_gate(ps, b, 40) == "unknown"
+    tab = build_table("AAA", ps, b, {ps.dates[150]}, {ps.dates[150]}, windows=(10,))
+    tab.flagged[0].gate = "out"
+    pairs, un = match_controls(tab, 10, caliper=3.0)
+    assert not pairs and un[0]["reason"] == "gate_out"
+    assert match_all([tab], window=10, caliper=3.0)["gate"]["flagged_out"] == 1
+    pairs, _ = match_controls(tab, 10, caliper=3.0, momentum_gate=False)
+    assert pairs

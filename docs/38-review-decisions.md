@@ -116,3 +116,11 @@ The back-of-envelope table above ignored clustering, overlapping windows and the
 At a 2% flag rate the ticker-day counts are about 4 times smaller. The flag rate is an assumption until a model exists. A ticker-only clustered test has a 14% to 26% false-positive rate under the null, so the two-way test is required.
 
 Reading: only an edge of about 200 bps or more is confirmable with this data. A smaller true edge would end as "Underpowered", which is a valid verdict under `32`, not a failure.
+
+## G. Found in the first real data (October 14, 2026)
+
+**D16. List posts and bots are not events.** The first exploratory run showed one subreddit (RobinHood, 2019) supplying 44% of all resolved ticker-days. The cause is a bot account posting a daily "Daily Stock Discussion Thread" whose body lists 50 to 150 tickers (one bot produced 2,705 candidates in a month). Such a post is an aggregate listing, is not a human early call, and may embed information gathered from later comments.
+- A post that resolves to more than 10 distinct stock candidates is a **list post**: it creates no ticker-day events. It is counted and reported per sub-year.
+- An author with 10 or more list posts in a month, or a name matching known bot patterns, is flagged as a **bot author** and all their posts are excluded from events and counted.
+- Both rules are applied identically in training and live. They are parameters of the transform and appear in the feature spec.
+- All counts reported before this fix (ticker-days, hit rates, coverage) are superseded. Rebuild before reading any result.

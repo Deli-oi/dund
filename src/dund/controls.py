@@ -34,6 +34,7 @@ class Cand:
     week: tuple         # ISO (year, week) of the ticker-day
     feat: list          # FEATURES vector or None
     net: dict           # window -> net abnormal return or None
+    gate: str = "pass"  # momentum gate: 'pass' | 'out' | 'unknown'
 
 
 @dataclass
@@ -68,6 +69,44 @@ def features_at(ps, i0, d, posted_dates):
     rets = [a[j] / a[j - 1] - 1.0 for j in range(i0 - 21, i0)]
     men = sum(1 for k in range(1, 8) if (d - timedelta(days=k)) in posted_dates)
     return [r5, r21, vr, _std(rets), float(men)]
+
+
+GATE_K = 2.0
+GATE_DAYS = 5
+GATE_LOOKBACK = 252
+GATE_MIN_HISTORY = 60     # trading days of history before the entry close
+GATE_MIN_BLOCKS = GATE_MIN_HISTORY // GATE_DAYS
+
+
+def _ar5(ps, bench, a, b):
+    """Benchmark-adjusted return of ps from row a to row b (a < b)."""
+    br = labels._bench_return(bench, ps.dates[a], ps.dates[b])
+    if br is None:
+        return None
+    return ps.adj_close[b] / ps.adj_close[a] - 1.0 - br
+
+
+def momentum_gate(ps, bench, i0, k=GATE_K):
+    """'pass' / 'out' / 'unknown'.  Uses only rows with index < i0 (row i0-1 is
+    the last close at or before decision time).  The trailing 5-day abnormal
+    return is compared with k times the SD of non-overlapping 5-day abnormal
+    returns of the preceding blocks within GATE_LOOKBACK trading days."""
+    if i0 is None or i0 - 1 - GATE_DAYS < 0:
+        return "unknown"
+    cur = _ar5(ps, bench, i0 - 1 - GATE_DAYS, i0 - 1)
+    if cur is None:
+        return "unknown"
+    lo = max(0, i0 - 1 - GATE_LOOKBACK)
+    hist, e = [], i0 - 1 - GATE_DAYS
+    while e - GATE_DAYS >= lo:
+        r = _ar5(ps, bench, e - GATE_DAYS, e)
+        if r is not None:
+            hist.append(r)
+        e -= GATE_DAYS
+    if i0 - 1 - lo < GATE_MIN_HISTORY - 1 or len(hist) < GATE_MIN_BLOCKS - 1:
+        return "unknown"
+    sd = _std(hist)
+    return "pass" if abs(cur) <= k * sd else "out"
 
 
 def net_outcomes(ticker, d, ps, bench, windows, cost=COST):
@@ -106,7 +145,8 @@ def build_table(ticker, ps, bench, posted_dates, flagged_dates, windows=(5, 10, 
         f = features_at(ps, i0, d, posted_dates)
         net, _ = net_outcomes(ticker, d, ps, bench, windows, cost) if f is not None \
             else ({w: None for w in windows}, None)
-        return Cand(i0, d, tuple(d.isocalendar())[:2], f, net)
+        return Cand(i0, d, tuple(d.isocalendar())[:2], f, net,
+                    momentum_gate(ps, bench, i0))
 
     fl, sealed_fl = [], []
     for d in sorted(flagged_dates):
@@ -143,15 +183,34 @@ def _sds(rows):
     return out
 
 
-def match_controls(tab, window=10, lookaround=40, caliper=1.0):
+def gate_counts(tables):
+    """Counts of flagged/control days by momentum-gate status."""
+    out = {"flagged_out": 0, "flagged_unknown": 0, "control_out": 0, "control_unknown": 0}
+    for t in tables:
+        for c in t.flagged:
+            if c.gate != "pass":
+                out["flagged_" + c.gate] += 1
+        for c in t.cands:
+            if c.gate != "pass":
+                out["control_" + c.gate] += 1
+    return out
+
+
+def match_controls(tab, window=10, lookaround=40, caliper=1.0, momentum_gate=True):
     """Return (pairs, unmatched).  Greedy in time order, no replacement,
-    non-overlapping control windows, caliper on every feature in pooled SD."""
-    cands = [c for c in tab.cands if c.net.get(window) is not None]
+    non-overlapping control windows, caliper on every feature in pooled SD.
+    With momentum_gate only gate-passing flagged days and controls are used;
+    gated flagged days are reported as 'gate_out' / 'gate_unknown'."""
+    cands = [c for c in tab.cands if c.net.get(window) is not None
+             and (not momentum_gate or c.gate == "pass")]
     targets = sorted(tab.flagged, key=lambda c: c.idx)
     pool = [c.feat for c in cands] + [t.feat for t in targets if t.feat]
     sds = _sds(pool) if pool else []
     used, pairs, un = [], [], []
     for t in targets:
+        if momentum_gate and t.gate != "pass":
+            un.append({"ticker": tab.ticker, "t": t.idx, "reason": "gate_" + t.gate})
+            continue
         if t.feat is None or t.net.get(window) is None:
             un.append({"ticker": tab.ticker, "t": t.idx, "reason": "no_history_or_outcome"})
             continue
@@ -190,7 +249,8 @@ def match_all(tables, **kw):
     reasons = {}
     for u in un:
         reasons[u["reason"]] = reasons.get(u["reason"], 0) + 1
-    return {"pairs": pairs, "unmatched": un, "n_unmatched": len(un), "reasons": reasons}
+    return {"pairs": pairs, "unmatched": un, "n_unmatched": len(un), "reasons": reasons,
+            "gate": gate_counts(tables)}
 
 
 def boot_estimate(pairs, cluster="two_way", B=999, alpha=0.05, rng=None):
@@ -301,7 +361,8 @@ def _read_rows(path):
 
 
 def run_estimand(events_csv, prices_dir, windows=(5, 10, 21), flag_col=None,
-                 B=999, seed=0, cost=COST, unseal_token=None, verbose=True):
+                 B=999, seed=0, cost=COST, unseal_token=None, verbose=True,
+                 momentum_gate=True):
     """Holm-adjusted results over the window family on the exploratory events file
     (columns of scripts/build_exploratory.py: ticker, date, decision_ts, ...).
     Every row is a posted ticker-day (used for the +/-10 day exclusion).  Flagged
@@ -334,9 +395,9 @@ def run_estimand(events_csv, prices_dir, windows=(5, 10, 21), flag_col=None,
     rng = random.Random(seed)
     res = []
     for w in windows:
-        m = match_all(tables, window=w)
+        m = match_all(tables, window=w, momentum_gate=momentum_gate)
         est = boot_estimate(m["pairs"], "two_way", B=B, rng=rng)
-        est.update(window=w, reasons=m["reasons"], n_flagged=sum(len(t.flagged) for t in tables))
+        est.update(window=w, reasons=m["reasons"], gate=m["gate"], n_flagged=sum(len(t.flagged) for t in tables))
         res.append(est)
     adj, rej = holm([r["p"] for r in res])
     for r, a, j in zip(res, adj, rej):
