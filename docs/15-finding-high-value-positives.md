@@ -2,6 +2,8 @@
 
 Written October 13, 2026. Extends `14`. Goal: find, on purpose, the posts that came before something big (a stock or token run, a repo that became a company), so training and the gold set are not left to whatever the random pull yields. Items marked (unverified) came from a search summary or my own knowledge and need a primary-source check before we rely on them.
 
+> **Role updated October 13, 2026 (Eli):** the outcome-first search and the gold tiers below are for **variable discovery and for evaluation slices only**. They must not define the training sample, because selecting on good outcomes skews it (`22`). Training uses the full census. Unicorn cases tell us which variables to build and are a test slice for checking that the model finds them, not training rows.
+
 ## What the literature suggests (read before designing)
 
 | Finding | Source | Effect on the plan |

@@ -59,3 +59,15 @@ If a check fails, the first response is to **fix the pull or reweight**, not to 
 - R0 pulls a **full month** for two or three subs by date order, with no score filter, so we can measure real post counts, removed share, link share, and field semantics.
 - R0's output includes a representativeness first pass: posts per day, hour-of-day, post-type mix, removed share, and the retrieved-time lag.
 - Only after R0 is read do we choose strata for the larger pull.
+
+## One transform path for training and live input (added October 13, 2026)
+
+The reason the hunt for good examples mattered was to know which variables to look for. That is a design input, not a sampling rule. Consequences:
+
+1. **Unicorn cases are used three ways only:** to propose variables (hypotheses in the discovery log, `19`), to build an evaluation slice that checks the model finds known early signals, and to sanity-check labels. They are never the training sample.
+2. **Training data is the census** (above), with its natural base rate and its natural dud-heavy mix.
+3. **Raw to model-ready is one code path.** Whatever transformation turns a raw post into features (link extraction, entity resolution, market context lookup, archetype assignment) is the same function in training and in live scoring. The live collector emits the same raw record shape as the dump, and a "live record" goes through the identical function.
+4. **Transformations are versioned and recorded** in each row (`transform_version`, `data_snapshot_id`), so a feature change is a new version, not an overwrite.
+5. **Parity test:** feed a sample of dump rows through the live ingestion adapter, run the shared transform, and require the output to equal the training-table values (within a stated tolerance). A failure blocks the release of any scoring job.
+6. **Where the dump lacks something live has** (score at one hour), the transform leaves it missing in training, and the model never uses it (`19` group F stays live-only).
+7. **Where live lacks something the dump has** (final score, later comments), the transform never produces it for training features either.

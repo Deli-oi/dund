@@ -101,6 +101,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - Pull full date-complete census per sub, ordered by time. No top, hot, or score-based pulls. Train-versus-live representativeness checks gate any model fit. See `22`.
 
+## Unicorn examples are for variable design only (October 13, 2026)
+
+- Good-example hunting informs which variables to build and gives an evaluation slice. It does not define the training sample. One transform path serves training and live input, with a parity test. See `22`, `15`.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
