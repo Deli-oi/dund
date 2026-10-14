@@ -111,7 +111,7 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 ## Research framing (October 13, 2026)
 
-- The project is a hypothesis test as much as an algorithm. H1: some x in y gives output c with hit-rate lower bound at confidence j above threshold k and baselines, plus a separate profit claim. Exploratory, confirmatory, replication phases; verdicts supported, not supported, or underpowered. See `24`.
+- The project is a hypothesis test as much as an algorithm. H1: some signal set S in a source universe U gives an early call C with hit-rate lower bound at confidence level L above hurdle H and baselines, plus a separate profit claim. Exploratory, confirmatory, replication phases; verdicts supported, not supported, or underpowered. See `24`.
 
 ## Reddit access (new)
 
