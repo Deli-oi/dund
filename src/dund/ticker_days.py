@@ -13,7 +13,9 @@ Each item_id is counted once per day (duplicates are dropped).
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Iterable
 
@@ -58,56 +60,139 @@ class _Acc:
         self.maxconf = max(self.maxconf, conf)
 
 
+MAX_CANDIDATES_PER_POST = 10
+
+
+@dataclass(frozen=True)
+class ListFilterConfig:
+    """D16 parameters; serializable into the feature spec via to_dict()."""
+    max_candidates_per_post: int = MAX_CANDIDATES_PER_POST
+    bot_list_posts_per_month: int = 10
+    bot_name_pattern: str = r"(bot|automoderator)$"
+    bot_names: tuple = ("AutoModerator",)
+
+    def to_dict(self):
+        d = asdict(self)
+        d["bot_names"] = list(self.bot_names)
+        return d
+
+    @classmethod
+    def from_dict(cls, d):
+        d = dict(d)
+        if "bot_names" in d:
+            d["bot_names"] = tuple(d["bot_names"])
+        return cls(**d)
+
+    def is_bot_name(self, name) -> bool:
+        if not name:
+            return False
+        return name in self.bot_names or re.search(self.bot_name_pattern, name, re.I) is not None
+
+
 class TickerDayAggregator:
-    def __init__(self, resolver):
+    """Items are buffered one calendar month (UTC) at a time so the bot-month rule
+    can exclude an author's earlier posts of the same month (D16)."""
+
+    def __init__(self, resolver, config=None):
         self.resolver = resolver
+        self.config = config or ListFilterConfig()
         self.stats = {
             "posts": Counter(),            # (sub, year) -> posts
-            "resolved": Counter(),         # (sub, year) -> posts with >=1 stock candidate
+            "resolved": Counter(),         # (sub, year) -> event posts with >=1 stock candidate
+            "list_post": Counter(),        # (sub, year) -> list posts (non-bot authors)
+            "bot_post": Counter(),         # (sub, year) -> posts by bot authors
+            "bot_authors": defaultdict(set),   # (sub, year) -> bot author hashes
+            "list_posts_by_author": Counter(),
             "mentions_by_year": defaultdict(Counter),   # year -> ticker -> posts
             "tickerdays_by_year": Counter(),
             "tickerdays_by_sub_year": Counter(),
             "tickers_by_year": defaultdict(set),
         }
         self._cur_day = None
+        self._last_date = None
         self._stock = {}
         self._repo = {}
         self._hist = {}     # ticker -> {date: n_posts} (finalized days only)
         self._seen = set()
-        self._day_ids = set()   # item ids already counted on the current day
+        self._buf = []          # (item, bot_name)
+        self._buf_month = None
+        self._bot = set()       # author hashes flagged bot (point-in-time, persistent)
 
-    def add(self, item):
-        """Feed one item; returns (ticker_rows, repo_rows) finalized by this call."""
+    def add(self, item, bot_name=False):
+        """Feed one item; returns (ticker_rows, repo_rows) finalized by this call.
+        bot_name: caller says the raw author name matches the bot-name rule."""
         d = utc_date(item.created_at)
-        if self._cur_day is not None and d < self._cur_day:
-            raise ValueError(f"items out of time order: {d} after {self._cur_day}")
+        if self._last_date is not None and d < self._last_date:
+            raise ValueError(f"items out of time order: {d} after {self._last_date}")
+        self._last_date = d
         out = ([], [])
-        if self._cur_day is not None and d > self._cur_day:
-            out = self._flush()
-        self._cur_day = d
-        if item.item_id in self._day_ids:
-            return out
-        self._day_ids.add(item.item_id)
-        title, body = split_text(item.text)
-        title_only = 0 if body else 1
-        cands = self.resolver.resolve(title, body, item.url or "")
-        key = (item.subreddit, d.year)
-        self.stats["posts"][key] += 1
-        stock = False
-        for c in cands:
-            if c.entity_type == "stock":
-                stock = True
-                self._stock.setdefault(c.id, _Acc()).add(item, c.confidence, title_only)
-            elif c.entity_type == "repo":
-                self._repo.setdefault(c.id, _Acc()).add(item, c.confidence, title_only)
-        if stock:
-            self.stats["resolved"][key] += 1
+        month = (d.year, d.month)
+        if self._buf_month is not None and month != self._buf_month:
+            out = self._process_month()
+        self._buf_month = month
+        self._buf.append((item, bool(bot_name)))
         return out
 
+    def _process_month(self):
+        buf, self._buf = self._buf, []
+        trows, rrows = [], []
+        seen_ids, rec = set(), []
+        lists = Counter()
+        for item, bn in buf:
+            d = utc_date(item.created_at)
+            if (d, item.item_id) in seen_ids:
+                continue
+            seen_ids.add((d, item.item_id))
+            title, body = split_text(item.text)
+            cands = self.resolver.resolve(title, body, item.url or "")
+            n_stock = len({c.id for c in cands if c.entity_type == "stock"})
+            is_list = n_stock > self.config.max_candidates_per_post
+            if is_list and item.author_hash:
+                lists[item.author_hash] += 1
+            rec.append((item, bn, d, body, cands, is_list))
+        for h, n in lists.items():
+            if n >= self.config.bot_list_posts_per_month:
+                self._bot.add(h)
+        s = self.stats
+        for item, bn, d, body, cands, is_list in rec:
+            if self._cur_day is not None and d > self._cur_day:
+                t, r = self._flush()
+                trows += t
+                rrows += r
+            self._cur_day = d
+            key = (item.subreddit, d.year)
+            s["posts"][key] += 1
+            ah = item.author_hash
+            if bn or (ah and ah in self._bot):
+                s["bot_post"][key] += 1
+                if ah:
+                    s["bot_authors"][key].add(ah)
+                    if is_list:
+                        s["list_posts_by_author"][ah] += 1
+                continue
+            if is_list:
+                s["list_post"][key] += 1
+                if ah:
+                    s["list_posts_by_author"][ah] += 1
+                continue
+            title_only = 0 if body else 1
+            stock = False
+            for c in cands:
+                if c.entity_type == "stock":
+                    stock = True
+                    self._stock.setdefault(c.id, _Acc()).add(item, c.confidence, title_only)
+                elif c.entity_type == "repo":
+                    self._repo.setdefault(c.id, _Acc()).add(item, c.confidence, title_only)
+            if stock:
+                s["resolved"][key] += 1
+        return trows, rrows
+
     def finish(self):
+        t, r = self._process_month()
         if self._cur_day is None:
-            return [], []
-        return self._flush()
+            return t, r
+        t2, r2 = self._flush()
+        return t + t2, r + r2
 
     def _flush(self):
         d = self._cur_day
@@ -152,13 +237,12 @@ class TickerDayAggregator:
                 "first_post_ts": a.first_ts.astimezone(timezone.utc).isoformat(),
             })
         self._stock, self._repo = {}, {}
-        self._day_ids = set()
         return trows, rrows
 
 
-def aggregate(items: Iterable, resolver) -> tuple:
+def aggregate(items: Iterable, resolver, config=None) -> tuple:
     """Convenience: returns (ticker_rows, repo_rows, aggregator)."""
-    agg = TickerDayAggregator(resolver)
+    agg = TickerDayAggregator(resolver, config)
     t, r = [], []
     for it in items:
         a, b = agg.add(it)

@@ -5,7 +5,7 @@ import pytest
 
 from dund.entities import EntityResolver, TickerTable
 from dund.schema import Item
-from dund.ticker_days import aggregate
+from dund.ticker_days import ListFilterConfig, TickerDayAggregator, aggregate
 
 R = EntityResolver(TickerTable.from_rows([("TSLA", "Tesla, Inc.", "1"), ("AAPL", "Apple Inc.", "2")]))
 
@@ -105,3 +105,49 @@ def test_build_script_requires_salt(monkeypatch, tmp_path):
     (tmp_path / "in").mkdir()
     with pytest.raises(RuntimeError):
         m.main(str(tmp_path / "in"), str(tmp_path / "out"))
+
+
+TICKS = [f"T{chr(65 + i // 26)}{chr(65 + i % 26)}" for i in range(150)]
+RB = EntityResolver(TickerTable.from_rows([(t, f"Zzname{i} Corp", str(i)) for i, t in enumerate(TICKS)]))
+QS = ["Q" + chr(65 + i // 26) + chr(65 + i % 26) for i in range(12)]
+R_BIG = EntityResolver(TickerTable.from_rows(
+    [("TSLA", "Tesla, Inc.", "1"), ("AAPL", "Apple Inc.", "2")]
+    + [(t, f"Zzname{i} Corp", str(i + 10)) for i, t in enumerate(QS)]))
+
+
+def test_list_post_creates_no_events_but_ordinary_does():
+    big = " ".join("$" + t for t in TICKS)
+    t, _, agg = aggregate([item(0, utc(2020, 1, 1), big, author="x")], RB)
+    assert t == [] and agg.stats["list_post"][("stocks", 2020)] == 1
+    t, _, _ = aggregate([item(1, utc(2020, 1, 1), "$TSLA $AAPL $TSLA", author="y")], R)
+    assert {r["ticker"] for r in t} == {"TSLA", "AAPL"}
+
+
+def _listposts(n, month, author="bot1", start=100):
+    big = " ".join("$" + q for q in QS)
+    return [item(start + i, utc(2020, month, 2 + i), big, author=author) for i in range(n)]
+
+
+def test_bot_author_month_rule_and_no_lookahead():
+    sept = [item(1, utc(2020, 9, 5), "$TSLA", author="bot1")]
+    octo = [item(50, utc(2020, 10, 1), "$AAPL", author="bot1")] + _listposts(10, 10, start=200)
+    nov = [item(900, utc(2020, 11, 3), "$TSLA", author="bot1"),
+           item(901, utc(2020, 11, 3), "$TSLA", author="human")]
+    t, _, agg = aggregate(sept + octo + nov, R_BIG)
+    r = {(x["ticker"], x["date"]): x for x in t}
+    assert ("TSLA", "2020-09-05") in r                 # September unaffected by October rule
+    assert ("AAPL", "2020-10-01") not in r             # same-month earlier post excluded
+    assert r[("TSLA", "2020-11-03")]["n_posts"] == 1   # bot excluded thereafter
+    assert agg.stats["bot_post"][("stocks", 2020)] == 12
+    t2, _, _ = aggregate([item(1, utc(2020, 10, 1), "$AAPL", author="b")] + _listposts(9, 10, "b"), R_BIG)
+    assert ("AAPL", "2020-10-01") in {(x["ticker"], x["date"]) for x in t2}
+
+
+def test_name_rule_and_serializable():
+    cfg = ListFilterConfig()
+    assert cfg.is_bot_name("AutoModerator") and cfg.is_bot_name("SomeTradingBot")
+    assert cfg.is_bot_name("foo_automoderator") and not cfg.is_bot_name("botany_fan")
+    assert ListFilterConfig.from_dict(json.loads(json.dumps(cfg.to_dict()))) == cfg
+    agg = TickerDayAggregator(R)
+    agg.add(item(0, utc(2020, 1, 1), "$TSLA", author="b"), bot_name=True)
+    assert agg.finish() == ([], []) and agg.stats["bot_post"][("stocks", 2020)] == 1

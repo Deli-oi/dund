@@ -6,6 +6,7 @@ sorting each month's items by time (single pass, no look-ahead).
 """
 import csv
 import gzip
+import json
 import os
 import re
 import sys
@@ -36,6 +37,8 @@ def main(in_dir, out_dir, tickers=DEFAULT_TICKERS):
             months[m.group(2)].append(p)
     salt = get_salt()  # raises if DUND_SALT is unset (D13); no fallback
     agg = TickerDayAggregator(EntityResolver(TickerTable.from_csv(tickers)))
+    cfg = agg.config
+    names = {}  # author_hash -> name (kept in memory only, for the top-10 report)
     nfiles = nbad = 0
     with gzip.open(out / "ticker_days.csv.gz", "wt", newline="", encoding="utf-8") as ft, \
          gzip.open(out / "repo_mentions.csv.gz", "wt", newline="", encoding="utf-8") as fr:
@@ -54,12 +57,17 @@ def main(in_dir, out_dir, tickers=DEFAULT_TICKERS):
                 nfiles += 1
                 for raw in iter_census(p):
                     try:
-                        items.append(to_item(raw, "ticker_days_v1", salt))
+                        it = to_item(raw, "ticker_days_v1", salt)
+                        a = raw.get("author")
+                        a = a if isinstance(a, str) else None
+                        if it.author_hash and a:
+                            names[it.author_hash] = a
+                        items.append((it, cfg.is_bot_name(a)))
                     except ValueError:
                         nbad += 1
-            items.sort(key=lambda i: (i.created_at, i.item_id))
-            for it in items:
-                emit(agg.add(it))
+            items.sort(key=lambda x: (x[0].created_at, x[0].item_id))
+            for it, bn in items:
+                emit(agg.add(it, bn))
         emit(agg.finish())
 
     s = agg.stats
@@ -80,7 +88,18 @@ def main(in_dir, out_dir, tickers=DEFAULT_TICKERS):
     for (sub, y), n in sorted(s["posts"].items()):
         r = s["resolved"][(sub, y)]
         print(f"{sub} | {y} | {n} | {r} | {r / n:.1%}")
-    print(f"\nout={out}")
+    print("\n## List posts / bot posts / bot authors per sub-year")
+    print("sub | year | posts | list_posts | bot_posts | bot_authors")
+    for (sub, y), n in sorted(s["posts"].items()):
+        k = (sub, y)
+        print(f"{sub} | {y} | {n} | {s['list_post'][k]} | {s['bot_post'][k]} | {len(s['bot_authors'][k])}")
+    print("\n## Top 10 bot authors by list posts")
+    allbots = set().union(*s["bot_authors"].values()) if s["bot_authors"] else set()
+    top = sorted(((s["list_posts_by_author"][h], names.get(h, "?")) for h in allbots), reverse=True)[:10]
+    for n, nm in top:
+        print(f"{nm} | {n}")
+    print(f"\nconfig={json.dumps(cfg.to_dict())}")
+    print(f"out={out}")
     return 0
 
 
