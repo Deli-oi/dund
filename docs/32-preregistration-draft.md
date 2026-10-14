@@ -1,5 +1,7 @@
 # 32 - Pre-registration draft (confirmatory phase), version 2
 
+> **Defaults adopted (October 14, 2026):** the open choices listed below were set by the facilitator at Eli's request. See `docs/38-review-decisions.md` section F. They freeze with this document.
+
 Status: Current, DRAFT, not frozen. Version 2, October 14, 2026. Built on `38` (authoritative decisions D1 to D11, D13), `24` (frame), `23` (data need), `16` and `17` (labels, weights), `28` (ticker-day unit, levers), `25` (the 14 subs), `31` (power simulation). Freeze rule: this file is hashed and dated, with `label_version`, `data_snapshot_id` and code commit recorded in section 14, **before any outcome (price) data is joined to the sealed period**. No results exist yet. Every number marked "planning" is arithmetic under assumptions, not a measurement. Paper only, not investment advice.
 
 Items marked **DECISION NEEDED** are Eli's calls, with a recommended default that applies if no answer is given before freezing. Items now settled say "decided in 38". The consolidated list is in section 15.

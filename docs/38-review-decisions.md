@@ -71,3 +71,48 @@ Written October 14, 2026 after four independent reviews (planning docs, data mod
 ## E. Parked
 
 - GitHub-star and repo outcomes (`30`), VIC, comment pulls (comment-introduced tickers kept as a later event type, `28`), BigQuery, X, paid price data (D10).
+
+## F. Defaults adopted for the open pre-registration choices (October 14, 2026, delegated by Eli)
+
+Eli asked the facilitator to choose the defaults and to expand the data supply (more subreddits) as needed. These are defaults, not frozen values. They freeze with `32` before any outcome data is joined.
+
+| # | Choice | Default | Reason |
+|---|---|---|---|
+| 1 | Round-trip cost | 20 bps | Conservative for liquid US equities with the liquidity floors, and easy to stress at 50 bps as a sensitivity |
+| 2 | Minimum edge of interest | **200 bps** net per flagged ticker-day over 10 days for the confirmatory claim (100 bps reported as an exploratory stretch) | Revised after power simulation v2 (`31`): 100 bps needs about 2,600 flagged units, which is not reachable. 200 bps needs about 640 |
+| 3 | Confirmatory family | 3 tests: windows 5, 10 and 21 days, one benchmark (market plus sector), Holm over the 3 | A small family keeps power. Everything else is descriptive and labelled exploratory |
+| 4 | Momentum gate | Trailing 5-day abnormal return within +/- 2 trailing standard deviations | As in D4 |
+| 5 | Universe | The 14 census subs plus the expansion list approved before freeze (`40`), frozen as a list | More ticker-days. The list is fixed before outcomes are joined, so adding subs is not a trial |
+| 6 | Model class | Regularized logistic regression on post-only features, ticker-day aggregated | Matches the project goal. Other models are exploratory |
+| 7 | Liquidity floors | Price at least $1, average daily dollar volume at least $500k, market cap at least $50M | As in v1 of the draft. A $2 or $5 floor is a sensitivity |
+| 8 | Sealed periods | As in `32` v2 (2020 and 2021-07 to 2022-06, extension 2023), revisit only if the census shows a block is too thin | Keeps both regimes represented |
+
+### What "minimum edge" means, in plain terms
+
+It is the smallest average gain per flagged call, after costs, that we would care to detect. If the real effect is smaller than that, we accept that we cannot tell it from zero. A smaller target needs much more data.
+
+Back-of-envelope with 10-day abnormal return noise of about 8% to 10% (standard deviation), one-sided test at 5%, 80% power, independent flagged units, `n = (1.645 + 0.84)^2 x sd^2 / edge^2`:
+
+| Edge worth detecting | Flagged units needed | Ticker-days at 2% flag rate | At 0.5% flag rate |
+|---|---|---|---|
+| 200 bps | about 125 | about 6,000 | about 25,000 |
+| 100 bps | about 500 | about 25,000 | about 100,000 |
+| 50 bps | about 2,000 | about 100,000 | about 400,000 |
+
+These are rough and ignore clustering, which makes them worse. The power simulation v2 replaces them. At the 100 bps default, supply in `28` (8,000 to 34,000 ticker-days a year from 14 subs) is enough at a 2% flag rate over a few years and short at 0.5%, which is why more subs and more years matter.
+
+
+### Correction after power simulation v2 (`31`)
+
+The back-of-envelope table above ignored clustering, overlapping windows and the shared weekly shock, and it was far too optimistic. Simulated with a two-way clustered test, 0.5% flag rate, 80% power, 5% one-sided:
+
+| True net edge | Flagged units needed | Ticker-days (0.5% flag rate) | Supply needed |
+|---|---|---|---|
+| 300 bps | about 280 | about 55,000 | about 1 to 3 years of expanded supply |
+| 200 bps | about 640 | about 128,000 | about 3 to 8 years |
+| 100 bps | about 2,600 | about 520,000 | about 10 to 26 years, not reachable |
+| 50 bps | about 10,500 | about 2,100,000 | not reachable |
+
+At a 2% flag rate the ticker-day counts are about 4 times smaller. The flag rate is an assumption until a model exists. A ticker-only clustered test has a 14% to 26% false-positive rate under the null, so the two-way test is required.
+
+Reading: only an edge of about 200 bps or more is confirmable with this data. A smaller true edge would end as "Underpowered", which is a valid verdict under `32`, not a failure.
