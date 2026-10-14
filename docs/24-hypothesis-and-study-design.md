@@ -23,7 +23,7 @@ October 13, 2026. Eli's framing: this is as much a research paper as an algorith
 
 Precision alone is not a profit indicator, so the second claim is separate and reported separately.
 
-## Why "exists x in y" is dangerous, and the protection
+## Why "exists a signal set in a universe" is dangerous, and the protection
 
 Searching many (`S`, `U`) choices until one works is the standard way to fool ourselves. So:
 
