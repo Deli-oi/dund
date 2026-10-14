@@ -38,6 +38,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `24-hypothesis-and-study-design.md` | The hypothesis (signal set S in universe U gives early call C at confidence L over hurdle H), phases, verdicts |
 | `25-r0-pilot-findings.md` | First real data: one-month census of 14 subs, volumes, removal, cashtag and repo-link findings |
 | `26-other-sources.md` | Other forums and sources beyond Reddit (candidates, scoring priors, first set, verification plan) |
+| `27-source-census-and-deleted-data.md` | Measured access and volume for other sources; whether removed Reddit bodies can be recovered (they cannot) |
 
 ## Reading order
 
