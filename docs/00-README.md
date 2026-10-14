@@ -36,6 +36,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `22-representativeness-and-sampling.md` | Census pull rules, skew sources, train-versus-live checks, reweighting |
 | `23-data-need-reassessment.md` | Power math, revised data need, explore-first plan, kill criteria |
 | `24-hypothesis-and-study-design.md` | The hypothesis (signal set S in universe U gives early call C at confidence L over hurdle H), phases, verdicts |
+| `25-r0-pilot-findings.md` | First real data: one-month census of 14 subs, volumes, removal, cashtag and repo-link findings |
 
 ## Reading order
 

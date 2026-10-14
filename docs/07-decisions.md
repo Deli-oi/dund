@@ -113,6 +113,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - The project is a hypothesis test as much as an algorithm. H1: some signal set S in a source universe U gives an early call C with hit-rate lower bound at confidence level L above hurdle H and baselines, plus a separate profit claim. Exploratory, confirmatory, replication phases; verdicts supported, not supported, or underpowered. See `24`.
 
+## R0 pilot run (October 13, 2026)
+
+- A one-month census of 14 subs was pulled through the Arctic Shift API (about 16,800 posts). Findings and plan changes in `25`. No signal tests were run.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
