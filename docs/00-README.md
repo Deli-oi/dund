@@ -33,6 +33,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `19-variable-catalog.md` | About 60 candidate variables, user archetypes, subreddit scan list, open-item decisions |
 | `20-subreddit-prioritization.md` | Scored ranking of the 86 candidate subs, waves, data-need math, override rules |
 | `21-cost-estimate.md` | Total build and recurring cost ranges, cost drivers |
+| `22-representativeness-and-sampling.md` | Census pull rules, skew sources, train-versus-live checks, reweighting |
 
 ## Reading order
 

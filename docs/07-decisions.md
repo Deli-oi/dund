@@ -97,6 +97,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - Subreddit is a model input (group D in `19`), so training learns per-sub weighting. The waves in `20` only decide what to pull and in what order. They are not a hard filter on what the model may learn from.
 
+## Sampling (October 13, 2026)
+
+- Pull full date-complete census per sub, ordered by time. No top, hot, or score-based pulls. Train-versus-live representativeness checks gate any model fit. See `22`.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
