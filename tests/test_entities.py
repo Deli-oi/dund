@@ -108,3 +108,97 @@ def test_dedup_and_boost_across_match_types():
 def test_multiple_entities_sorted():
     c = R.resolve("$MSFT vs advanced micro devices")
     assert [x.id for x in c] == ["MSFT", "AMD"]
+
+
+# ---- resolver tuning on real posts (docs/33-resolver-tuning.md) ----
+ROWS2 = ROWS + [
+    ("GOOG", "Alphabet Inc.", "0001652044"), ("GOOGL", "Alphabet Inc.", "0001652044"),
+    ("META", "Meta Platforms, Inc.", "0001326801"), ("XYZ", "Block, Inc.", "0001512673"),
+    ("BRK-A", "BERKSHIRE HATHAWAY INC", "0001067983"),
+    ("BRK-B", "BERKSHIRE HATHAWAY INC", "0001067983"),
+    ("AMZN", "AMAZON COM INC", "0001018724"), ("F", "FORD MOTOR CO", "0000037996"),
+    ("MOMO", "Hello Group Inc.", "0001610601"), ("RDDT", "Reddit, Inc.", "0001713445"),
+    ("UK", "Ucommune International Ltd", "0001821424"), ("HOOD", "Robinhood Markets, Inc.", "0001783879"),
+    ("IP", "INTERNATIONAL PAPER CO /NEW/", "0000051434"), ("CVS", "CVS HEALTH CORP", "0000064803"),
+    ("SPY", "SPDR S&P 500 ETF TRUST", "0000884394"),
+    ("WFC", "WELLS FARGO & COMPANY/MN", "0000072971"),
+    ("GE", "GENERAL ELECTRIC CO", "0000040545"),
+    ("XX1", "Acme Corp", "0000000001"), ("XX2", "Acme Corp", "0000000002"),
+]
+R2 = EntityResolver(TickerTable.from_rows(ROWS2))
+
+
+def test_lowercase_cashtag():
+    c = R2.resolve("$amzn bye bye puts")
+    assert ids(c) == {"AMZN"} and c[0].match_type == "cashtag"
+
+
+def test_lowercase_common_word_cashtag_rejected():
+    assert not ids(R2.resolve("costs me $it every time, $all gone"))
+
+
+def test_class_share_brk_dot_b():
+    assert ids(R2.resolve("BRK.B + VTI Investing Strategy")) == {"BRK-B"}
+    assert ids(R2.resolve("long $BRK.B for years")) == {"BRK-B"}
+
+
+def test_alias_google_and_facebook():
+    assert ids(R2.resolve("Google to acquire Fitbit")) == {"GOOGL"}
+    assert ids(R2.resolve("Facebook earnings, stock falls")) == {"META"}
+
+
+def test_renamed_cashtag_alias_fb_sq():
+    assert ids(R2.resolve("Short $FB here")) == {"META"}
+    assert ids(R2.resolve("my $SQ puts printed")) == {"XYZ"}
+
+
+def test_cik_dedup_share_classes():
+    c = R2.resolve("$GOOG vs $GOOGL, Alphabet is cheap")
+    assert len([x for x in c if x.cik == "0001652044"]) == 1
+    c = R2.resolve("Google stock is up", "$GOOG calls")
+    assert ids(c) == {"GOOG"}                     # explicit ticker wins over alias target
+    assert len(c) == 1
+
+
+def test_duplicate_company_name_distinct_ciks_is_ambiguous():
+    assert not ids(R2.resolve("Acme Corp reported earnings"))
+
+
+def test_platform_and_generic_names_not_matched():
+    assert not ids(R2.resolve("Hello everyone, People ask about Reddit and Robinhood"))
+    assert not ids(R2.resolve("I bought paper at the store and a visa for the trip, stock up"))
+
+
+def test_single_word_name_needs_finance_context():
+    assert "AMZN" in ids(R2.resolve("Amazon earnings tomorrow"))
+    assert not ids(R2.resolve("Ucommune was fun"))
+
+
+def test_country_and_jargon_not_bare_tickers():
+    assert not ids(R2.resolve("UK citizen buying stock, what tax do I pay? EU options broker"))
+
+
+def test_two_letter_bare_needs_stronger_context():
+    assert not ids(R2.resolve("GE wins"))
+    assert "GE" not in ids(R2.resolve("With cases like GE, the defensive stocks"))  # one finance word
+    assert "GE" in ids(R2.resolve("GE earnings next week, buying calls"))
+
+
+def test_bare_ticker_followed_by_price():
+    assert "TSLA" in ids(R2.resolve("We did it boys TSLA $420.69"))
+    assert "CVS" in ids(R2.resolve("$116K in CVS play about to break even"))
+
+
+def test_jurisdiction_tag_stripped_from_name():
+    assert "WFC" in ids(R2.resolve("Wells Fargo is being investigated"))
+
+
+def test_name_index_fast():
+    import time
+    big = TickerTable.from_rows(
+        [("T%d" % i, "Company Number %d Holdings" % i, "%010d" % i) for i in range(5000)] + ROWS)
+    r = EntityResolver(big)
+    t0 = time.time()
+    for _ in range(200):
+        r.resolve("Some post about Nvidia and nothing else", "lorem ipsum " * 50)
+    assert time.time() - t0 < 2.0

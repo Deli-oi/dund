@@ -38,9 +38,11 @@ Break-even precision is `p* = loss / (loss + gain)`. A scenario table (G = gain 
 | 3.0 | 1.0 | 3.00 | 0.250 | 0.400 | 0.450 |
 | 1.0 | 0.5 | 2.00 | 0.333 | 0.483 | 0.533 |
 
-**Default scenario: G = L = 100% of the position** (a hit doubles, a miss can be a total loss, which is a realistic worry for illiquid small caps and crypto). That gives p* = 0.50.
+> **Update (October 14, 2026, `38` D1, `32` v2):** the scenario below (G = L = 100%, p* = 0.50, rule p* + 0.20 = 0.70) is an illustration only and is no longer a default or a pass/fail bar. The live threshold is the data-derived break-even precision `p_be = (-E[R|miss]) / (E[R|hit] - E[R|miss])`, estimated on training data net of cost, and the margin is the lower bound of live precision minus `p_be`. The scenario table is kept as a sensitivity illustration of how payoff shape moves break-even precision.
 
-**Default rule: act only if the lower confidence bound on precision is at least p* + 0.20 = 0.70.**
+**Illustrative scenario (formerly the default): G = L = 100% of the position** (a hit doubles, a miss can be a total loss, which is a realistic worry for illiquid small caps and crypto). That gives p* = 0.50.
+
+**Formerly the default rule (retired as a bar, see `38` D1):** act only if the lower confidence bound on precision is at least p* + 0.20 = 0.70. Replaced by: lower bound of live precision above the data-derived `p_be` plus the margin set in `32`.
 
 #### 2. How many alerts that takes (Clopper-Pearson lower bound)
 

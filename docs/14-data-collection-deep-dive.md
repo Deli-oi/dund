@@ -1,4 +1,5 @@
 # 14 - Data collection deep dive
+> **Status: SUPERSEDED in part (October 14, 2026).** The project is now ticker-first, with GitHub-star outcomes deferred, and the study design and decisions in `docs/38-review-decisions.md` and `docs/07-decisions.md` override this document where they differ. Kept for history and for the sections not contradicted.
 
 Written October 13, 2026 after the switch to the public Reddit history repo as the training source (`07`, `11`). This audits `11` and `04` and proposes changes. Nothing here has been run. Items marked (measure) are open until a real count exists. I have not yet seen the Reddit repo's schema, so every claim about its fields is an assumption to check at stage R0.
 

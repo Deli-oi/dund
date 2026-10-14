@@ -68,4 +68,30 @@ def test_no_score_leak():
     view = it.feature_view()
     assert "raw_score_fields" not in view
     assert not set(SCORE_FIELD_NAMES) & set(view)
-    assert set(view) <= {f.name for f in fields(it)}
+    assert set(view) <= {f.name for f in fields(it)} | {"hour_utc", "weekday", "author_age_days"}
+
+
+def test_feature_view_is_allowlist():
+    import dataclasses
+    from dund.schema import FEATURE_ALLOWLIST
+    it = to_item(RAW, "v1")
+    view = it.feature_view()
+    for bad in ("removed_flag", "removed_by_category", "flair", "subreddit_subscribers",
+                "edited_flag", "raw_score_fields", "author_hash", "retrieved_lag_s"):
+        assert bad not in view
+    assert not set(SCORE_FIELD_NAMES) & set(view)
+    # a brand-new Item field is not exposed unless allowlisted
+    Sub = dataclasses.make_dataclass("Sub", [("new_field", int, 1)], bases=(type(it),), frozen=True)
+    sub = Sub(**{f.name: getattr(it, f.name) for f in fields(it)})
+    assert "new_field" not in sub.feature_view()
+    assert set(FEATURE_ALLOWLIST) <= set(view)
+
+
+def test_edited_flag_and_is_trainable():
+    from dund.transform import is_trainable
+    assert to_item(RAW, "v1").edited_flag is True
+    assert not is_trainable(to_item(RAW, "v1"))
+    ok = to_item({"id": "a", "created_utc": 5, "title": "hi", "edited": False}, "v1")
+    assert ok.edited_flag is False and is_trainable(ok)
+    empty = to_item({"id": "b", "created_utc": 5, "title": "[removed]"}, "v1")
+    assert not is_trainable(empty)

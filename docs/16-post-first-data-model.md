@@ -4,6 +4,23 @@ Decision of October 13, 2026 (Eli). Supersedes the repo-first framing in `14` se
 
 ## Decision
 
+> **Alignment to `38` (October 14, 2026), read first.** Where this doc and `38` disagree, `38` wins.
+> - **Unit (D2):** the modelling and test unit is the **ticker-day** (ticker, UTC date). Post-level `p` and `c` below are inputs that feed the ticker-day aggregate (one function, D12); they are not the unit of the claim or of clustering (cluster key: ticker).
+> - **Primary label (D1, D3):** the continuous 10-trading-day net abnormal return (after assumed round-trip cost). The hard hit (yes/no) is descriptive. The horizons 3, 12, 24 months below belong to the repo/tool radar, not the market model.
+> - **Windows (D3):** one primary window (10 days); 5 and 21 are pre-registered robustness, not selected on.
+> - **Voters:** the voter table is exploratory weighting only. Weights fit on the voters are never used in the confirmatory verdict. The 64 to 252 day voter in `17` is not implemented.
+> - **Down-weighting by decisiveness** (`w = c x ...`): `d` is computed from the label, so weighting by it is label-conditional selection. Allowed for exploratory training only. It is not part of the confirmatory estimand, which uses all eligible flagged and matched-control ticker-days unweighted by `c`.
+
+### Glossary: the three confidence notions (defined once here)
+
+| Name | Where | Defined as | Used for | Relation |
+|---|---|---|---|---|
+| `c` (label confidence) | `16` | `d x q`: decisiveness times evidence quality, on a training label | Exploratory training weight, review queue, hard-label sets | Describes the training example. Never shown as a live prediction confidence |
+| margin | `18` | Lower bound of live `p` minus break-even precision `p_be` (D1) | ACT/WATCH/SKIP decision | Consumes the calibrated interval from `37`; it is a decision quantity, not a probability |
+| calibrated interval | `37` (with `18`) | Calibrated probability plus interval for a new post or ticker-day, checked on held-out data | Live output and track record | Independent of `c`. The margin is computed from its lower bound |
+
+Chain: `c` shapes what the model learns (exploratory only); the model emits a calibrated interval; margin turns the interval into an action.
+
 - **Input point: the post.** Every post from the exported Reddit dataset in scanned subreddits is a row. Nothing is dropped because it lacks a repo.
 - **Repos (and tickers, tokens) are checked along the way.** When a post mentions a checkable entity, we resolve it and look up what happened afterward. The entity supplies outcome evidence for the post, and it is not the row.
 - **Each post gets an impact label `p` and a confidence `c`.** `p` is our estimate that the post was an early signal that mattered (yes versus no). `c` says how much to trust that estimate. Training weight uses both.

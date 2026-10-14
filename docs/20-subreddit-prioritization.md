@@ -4,6 +4,8 @@ Written October 13, 2026. Answers "do we need to monitor all of those?" No. This
 
 > **Superseded in part by `23`:** the scores are priors that only order the first look, and the data-need figure below is a lower bound.
 
+> **Note (October 14, 2026, `38`, `07`):** the scores are priors only. They order the first look and are not a filter and not evidence. The census is the full 14-sub set (not waves): waves below describe an earlier staged plan and no sub is excluded from the census by rank.
+
 ## Scoring rubric (1 to 5 each, then 0 to 100)
 
 | Factor | Weight | 5 means |

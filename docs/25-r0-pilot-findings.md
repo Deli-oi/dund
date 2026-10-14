@@ -1,4 +1,5 @@
 # 25 - R0 pilot findings (August 2026, 14 subs)
+> **Update (October 14, 2026):** the unit of analysis is the ticker-day and the design effect measured in `28` is 1 to 1.6, not 3 to 4. The weak-case verdicts here are superseded by `28`, `31` and `38`.
 
 Run October 13, 2026 through the Arctic Shift posts API (`scripts/r0_api_pull.py`, polite, 1 s pause, 100 per request). A full-month census, ordered by time, no score filter (`22`). Raw files are not in the repo (kept in the session scratchpad, outside Dropbox). Analysis: `scripts/r0_analyze.py`. **One month, one year. These are not representative of 2005 to 2023, no outcomes are joined yet, and cashtag counts are upper bounds.**
 

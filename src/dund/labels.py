@@ -6,10 +6,11 @@ import csv
 import gzip
 import os
 from dataclasses import dataclass, field
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 CLOSE_UTC = time(21, 0)  # fixed 21:00 UTC close (16:00 ET in EST; see doc 35)
+MAX_ENTRY_GAP_DAYS = 5
 WINDOWS = (1, 5, 10, 21, 63)
 PLACEBO_LOOKBACK = 252
 MIN_PLACEBO = 100
@@ -17,6 +18,7 @@ PRICE_FLOOR = 1.0
 ADV_FLOOR = 500_000.0
 MCAP_FLOOR = 50_000_000.0
 ADV_DAYS = 20
+DELIST_DROP = -0.5  # final close this far below the previous is labelled 'delisted'
 
 
 @dataclass
@@ -43,14 +45,19 @@ class PriceSeries:
 
 
 def series_from_rows(ticker: str, rows: Iterable[dict]) -> PriceSeries:
-    """Rows need date, close, adj_close, volume. Rows with blank/non-positive prices are
+    """Rows need date, close, adj_close (or adjclose), volume. Rows with blank/non-positive prices are
     dropped (missing); duplicate dates keep the last row."""
     by_date: Dict[date, Tuple[float, float, float]] = {}
     for r in rows:
         try:
             d = date.fromisoformat(str(r["date"])[:10])
             c = float(r["close"])
-            a = float(r.get("adj_close") or r["close"])
+            a_raw = r.get("adj_close")
+            if a_raw in (None, ""):
+                a_raw = r.get("adjclose")
+            if a_raw in (None, ""):
+                continue  # no adjusted price: missing, never fall back to unadjusted close
+            a = float(a_raw)
             v = float(r.get("volume") or 0.0)
         except (KeyError, ValueError, TypeError):
             continue
@@ -84,12 +91,30 @@ def _nth_sunday(year: int, month: int, n: int) -> date:
     return date(year, month, first_sunday + 7 * (n - 1))
 
 
+def _is_half_day(d: date) -> bool:
+    """NYSE early closes (13:00 ET): day after Thanksgiving, Dec 24 and Jul 3 when weekdays."""
+    if d.weekday() >= 5:
+        return False
+    if (d.month, d.day) in ((12, 24), (7, 3)):
+        return True
+    thanksgiving = _nth_weekday(d.year, 11, 3, 4)  # 4th Thursday
+    return d == thanksgiving + timedelta(days=1)
+
+
+def _nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
+    first = date(year, month, 1)
+    return date(year, month, 1 + (weekday - first.weekday()) % 7 + 7 * (n - 1))
+
+
 def close_utc(d: date) -> time:
     """US equity close in UTC: 20:00 during US daylight time (2nd Sunday of March to
     1st Sunday of November, rules in force since 2007), else 21:00. Using 21:00 in summer
     would treat an already-printed close as still in the future (look-ahead)."""
     start, end = _nth_sunday(d.year, 3, 2), _nth_sunday(d.year, 11, 1)
-    return time(20, 0) if start <= d < end else time(21, 0)
+    dst = start <= d < end
+    if _is_half_day(d):  # 13:00 ET
+        return time(17, 0) if dst else time(18, 0)
+    return time(20, 0) if dst else time(21, 0)
 
 
 def entry_index(series: PriceSeries, ts: datetime) -> Optional[int]:
@@ -100,7 +125,14 @@ def entry_index(series: PriceSeries, ts: datetime) -> Optional[int]:
     d = t.date()
     first_day = d if t.time() < close_utc(d) else date.fromordinal(d.toordinal() + 1)
     i = bisect.bisect_left(series.dates, first_day)
-    return i if i < len(series) else None
+    if i >= len(series):
+        return None
+    # A series that starts long after the post (post-reorg or post-IPO history, or a reused
+    # ticker symbol) is a different entity or a future price, not an entry. Longest real gap
+    # is a long weekend plus a holiday, so allow a few calendar days only.
+    if (series.dates[i] - first_day).days > MAX_ENTRY_GAP_DAYS:
+        return None
+    return i
 
 
 @dataclass
@@ -188,10 +220,13 @@ def label_event(ticker: str, ts: datetime, series: Optional[PriceSeries],
         return lab
     mkt_end = min((s.last_date for s in benchmarks.values() if s.last_date), default=None)
     ended_early = mkt_end is not None and series.last_date < mkt_end
+    end_reason = "series_ended_early"
+    if ended_early and len(series) >= 2 and series.close[-1] / series.close[-2] - 1.0 <= DELIST_DROP:
+        end_reason = "delisted"
     i0 = entry_index(series, ts)
     if i0 is None:
         lab.missing_price = True
-        lab.reason = "delisted_or_series_ended" if ended_early else "missing_price:no_entry_after_ts"
+        lab.reason = end_reason if ended_early else "missing_price:no_entry_after_ts"
         return lab
     lab.entry_date, lab.entry_price = series.dates[i0], series.close[i0]
 
@@ -216,7 +251,7 @@ def label_event(ticker: str, ts: datetime, series: Optional[PriceSeries],
         lab.windows[n] = w
         j = i0 + n
         if j >= len(series):
-            w.reason = "delisted_or_series_ended" if ended_early else "insufficient_forward_window"
+            w.reason = end_reason if ended_early else "insufficient_forward_window"
             continue
         b = _bench_return(benchmarks, series.dates[i0], series.dates[j])
         if b is None:
@@ -225,7 +260,8 @@ def label_event(ticker: str, ts: datetime, series: Optional[PriceSeries],
         w.raw_return = _ret(series.adj_close, i0, j)
         w.benchmark_return = b
         w.car = w.raw_return - b
-        pl = sorted(placebo_cars(series, benchmarks, i0, n, event_dates, lookback))
+        past = [e for e in event_dates if e < series.dates[i0]]  # never future events
+        pl = sorted(placebo_cars(series, benchmarks, i0, n, past, lookback))
         w.n_placebo = len(pl)
         if len(pl) < min_placebo:
             w.reason = "insufficient_placebo"

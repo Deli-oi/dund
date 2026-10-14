@@ -12,6 +12,11 @@ SALT_ENV = "DUND_SALT"
 SCORE_FIELD_NAMES = ("score", "ups", "upvote_ratio", "num_comments", "num_crossposts")
 
 
+FEATURE_ALLOWLIST = ("text", "url", "domain", "is_self", "item_type", "subreddit",
+                     "author_created_utc", "over_18")
+# Derived (computed in feature_view): hour_utc, weekday, author_age_days.
+
+
 def get_salt() -> str:
     salt = os.environ.get(SALT_ENV)
     if not salt:
@@ -50,9 +55,18 @@ class Item:
     transform_version: str
     # NOT FEATURES: refreshed later, label-side only. Excluded from feature_view().
     raw_score_fields: Dict[str, Any] = field(default_factory=dict, compare=True)
+    # AUDIT: True if the post was edited (text may include later outcomes). Never a feature.
+    edited_flag: bool = False
+    over_18: bool = False  # known at post time; allowlisted feature
 
     def feature_view(self) -> Dict[str, Any]:
-        """Fields allowed as model inputs. Excludes raw_score_fields and removal info
-        (removed_* is label/audit side, not knowable at post time)."""
-        excluded = {"raw_score_fields", "removed_flag", "removed_by_category"}
-        return {f.name: getattr(self, f.name) for f in fields(self) if f.name not in excluded}
+        """Explicit ALLOWLIST of post-time-knowable fields (docs/38 D9). New Item fields
+        are excluded until added to FEATURE_ALLOWLIST. Audit fields (removed_*, flair,
+        subreddit_subscribers, edited_flag, scores, ...) stay on Item only."""
+        out: Dict[str, Any] = {k: getattr(self, k) for k in FEATURE_ALLOWLIST}
+        out["hour_utc"] = self.created_at.hour
+        out["weekday"] = self.created_at.weekday()
+        acu = self.author_created_utc
+        out["author_age_days"] = (
+            (self.created_at.timestamp() - acu) / 86400.0 if acu is not None else None)
+        return out

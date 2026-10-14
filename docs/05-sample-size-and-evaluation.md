@@ -1,4 +1,5 @@
 # 05 - Sample size and evaluation
+> **Status: SUPERSEDED in part (October 14, 2026).** The project is now ticker-first, with GitHub-star outcomes deferred, and the study design and decisions in `docs/38-review-decisions.md` and `docs/07-decisions.md` override this document where they differ. Kept for history and for the sections not contradicted.
 
 All numbers here come from a planning script with assumed inputs. They are estimates, not measurements. The real positive rate is unknown until the counting step (phase 2) is run.
 

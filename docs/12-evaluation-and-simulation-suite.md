@@ -1,4 +1,5 @@
 # 12 - Evaluation and simulation suite
+> **Status: SUPERSEDED in part (October 14, 2026).** The project is now ticker-first, with GitHub-star outcomes deferred, and the study design and decisions in `docs/38-review-decisions.md` and `docs/07-decisions.md` override this document where they differ. Kept for history and for the sections not contradicted.
 
 Goal: a test suite that shows whether the model has actually learned something from the data, a simulator that shows what trading on its reports would have done, and two separate dashboards, one for the **honest accuracy** and one for **exploring** (where noise is allowed to show).
 
@@ -37,7 +38,7 @@ These are the methods that separate learning from fitting noise:
 
 ## Truth board contents
 
-1. **Verdict banner:** pass or fail against pre-registered gates: beats baselines, lower bound on precision at or above target, calibration error within tolerance, beats the permutation null at p < 0.01 after deflation, leakage tests green.
+1. **Verdict banner:** (updated per `38` D1/D6 and `32` v2: the confirmatory gate is a net abnormal-return difference lower bound above zero versus matched controls, Holm-corrected over at most 20 specifications; precision is descriptive and no 0.70 target applies) pass or fail against pre-registered gates: beats baselines, lower bound on precision at or above target (now: the `32` estimand), calibration error within tolerance, beats the permutation null at p < 0.01 after deflation, leakage tests green.
 2. **Out-of-sample metrics with intervals:** precision at k, recall at a review budget, PR-AUC, Brier score, expected calibration error. Slices: cold-start authors, confounded cases.
 3. **Noise audit panel:** observed metrics against the permutation null, the random-feature control, the planted-signal result, and the label-noise curve.
 4. **Learning curves and d versus N status:** effective features against effective positives.

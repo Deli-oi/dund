@@ -2,6 +2,13 @@
 
 Decision of October 13, 2026. Goal restated by Eli: **train a financial logistic model that maps posts to shifts in the market, as early indicators.** Every weight below is judged against that standard. This reorders the voters in `16` (repo outcomes become supporting evidence, market outcomes become primary). All numbers are starting priors to be re-fit on earlier years and frozen (`04`); none are measured.
 
+> **Alignment to `38` (October 14, 2026), read first.**
+> - **Unit and label (D1, D2, D3):** unit is the ticker-day; post-level `p` and `c` feed the ticker-day aggregate. Primary label is the continuous 10-trading-day net abnormal return; the hard hit is descriptive. One primary window (10 days), with 5 and 21 as robustness.
+> - **Voter ensemble is exploratory weighting only.** The three CAR windows (1 to 20, 21 to 63, 64 to 252 days) are nested views of the same price path, so voting them together double-counts one outcome. The lead rule and the confounder flag are computed from that same path and double-count it again. The weights below are priors for exploratory weighting, never for the confirmatory verdict.
+> - **The 64 to 252 day voter (weight 0.15) is not implemented.** Its weight is not redistributed in code; treat the table as a historical prior.
+> - **`w = c x ...` and decisiveness down-weighting** is label-conditional selection (rows are weighted by how clear their own outcome is). Allowed for exploratory training only. Not part of the confirmatory estimand.
+> - **Confidence notions:** `c`, margin and the calibrated interval are defined once in the glossary in `16`.
+
 ## Data source (found October 13, 2026)
 
 - Arctic Shift, GitHub: `https://github.com/ArthurHeitmann/arctic_shift` (tooling, scripts, and link pages). Data is distributed by torrent through Academic Torrents, not stored in git.

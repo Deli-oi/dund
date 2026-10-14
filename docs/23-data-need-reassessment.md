@@ -1,4 +1,5 @@
 # 23 - Data need reassessment (supersedes the numbers in `20` and `21`)
+> **Update (October 14, 2026):** the unit of analysis is the ticker-day and the design effect measured in `28` is 1 to 1.6, not 3 to 4. The weak-case verdicts here are superseded by `28`, `31` and `38`.
 
 October 13, 2026. Eli's challenge: we have no basis for saying which subs, variables, or trends hold early signals, and the data need is higher than estimated. **Both are right.** This replaces the "50,000 to 100,000 resolved posts" figure in `20`.
 

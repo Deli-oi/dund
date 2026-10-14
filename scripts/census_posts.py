@@ -77,7 +77,11 @@ def pull(sub, y, m, path):
             n += len(new)
             if not data or not new:
                 break
-            cursor = int(data[-1]["created_utc"])
+            if len(data) == 100 and len({int(d["created_utc"]) for d in data}) == 1:
+                raise RuntimeError(f"page of 100 posts in one second for {sub} {y}-{m:02d}; cannot page")
+            # `after` is exclusive (probed 2026-10-14), so step back one second and dedupe by id:
+            # otherwise posts sharing the last second of a page would be skipped.
+            cursor = int(data[-1]["created_utc"]) - 1
             time.sleep(1.0)
     os.replace(tmp, path)
     return n, requests

@@ -49,3 +49,28 @@ def test_atomic_write(tmp_path):
     pp.write_rows_atomic(f, pp.parse_chart(CANNED))
     assert f.exists() and not list(tmp_path.glob("*.tmp"))
     assert gzip.open(f, "rt").read().startswith("date,open")
+
+
+def test_round_trip_adjclose(tmp_path):
+    from dund.labels import load_prices
+    rows = pp.parse_chart(CANNED)
+    p = tmp_path / "AAA.csv.gz"
+    pp.write_rows_atomic(p, rows)
+    s = load_prices(str(p))
+    assert s.adj_close == [1.4, 2.4]
+    assert s.close == [1.5, 2.5]
+
+
+def test_permanent_miss_rules():
+    assert pp.is_permanent_miss(404, "Not Found")
+    assert pp.is_permanent_miss(200, "No data found, symbol may be delisted")
+    assert not pp.is_permanent_miss(0, "gave up after retries")
+    assert not pp.is_permanent_miss(500, "Server Error")
+    assert not pp.is_permanent_miss(403, "Forbidden")
+
+
+def test_drop_incomplete_today():
+    import datetime as dt
+    rows = [{"date": "2026-10-13"}, {"date": "2026-10-14"}]
+    assert pp.drop_incomplete_today(rows, dt.date(2026, 10, 14)) == rows[:1]
+    assert pp.drop_incomplete_today(rows, dt.date(2026, 10, 15)) == rows

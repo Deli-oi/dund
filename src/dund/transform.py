@@ -48,7 +48,9 @@ def to_item(raw: dict, transform_version: str, salt: Optional[str] = None) -> It
     text = (title + "\n\n" + body) if body else title
     rbc = _opt_str(raw.get("removed_by_category"))
     removed = bool(rbc) or (isinstance(body_raw, str) and body_raw.strip() == "[removed]")
-    # `edited` may be bool or timestamp; it is not part of the schema (post-time unknowable).
+    # `edited` may be bool or a timestamp; kept as an audit flag only (docs/38 D9).
+    edited = raw.get("edited")
+    edited_flag = bool(edited) and edited != 0
     scores = {k: raw.get(k) for k in SCORE_FIELD_NAMES}
     return Item(
         source="reddit",
@@ -69,6 +71,8 @@ def to_item(raw: dict, transform_version: str, salt: Optional[str] = None) -> It
         retrieved_lag_s=(retrieved - created) if retrieved is not None else None,
         transform_version=transform_version,
         raw_score_fields=scores,
+        edited_flag=edited_flag,
+        over_18=bool(raw.get("over_18")),
     )
 
 
@@ -79,3 +83,8 @@ def iter_census(path) -> Iterator[dict]:
             line = line.strip()
             if line:
                 yield json.loads(line)
+
+
+def is_trainable(item: Item) -> bool:
+    """False for edited posts (text may contain later outcomes) or empty text."""
+    return not item.edited_flag and bool(item.text.strip())

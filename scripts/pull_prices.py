@@ -79,6 +79,20 @@ def parse_chart(payload: dict) -> list[dict]:
     return rows
 
 
+def is_permanent_miss(status: int, reason: str) -> bool:
+    """Only 404 or 'No data found' is a real miss. Network errors (status 0) and other
+    4xx/5xx are transient: not written to misses.tsv, so a rerun retries them."""
+    r = (reason or "").lower()
+    return status == 404 or "no data found" in r or r == "no data"
+
+
+def drop_incomplete_today(rows: list[dict], today: dt.date) -> list[dict]:
+    """Drop the last row if dated today (UTC): the bar is still forming."""
+    if rows and rows[-1]["date"] >= today.isoformat():
+        return rows[:-1]
+    return rows
+
+
 def write_rows_atomic(path: Path, rows: list[dict]) -> None:
     tmp = path.with_name(path.name + ".tmp")
     with gzip.open(tmp, "wt", newline="", encoding="utf-8") as f:
@@ -116,7 +130,7 @@ def fetch(ticker: str, p1: int, p2: int):
             with urllib.request.urlopen(req, timeout=30) as r:
                 return r.status, json.loads(r.read().decode("utf-8")), ""
         except urllib.error.HTTPError as e:
-            if e.code == 429 or e.code >= 500:
+            if e.code != 404:
                 time.sleep(delay)
                 delay *= 2
                 continue
@@ -127,10 +141,9 @@ def fetch(ticker: str, p1: int, p2: int):
             except Exception:
                 pass
             return e.code, None, reason or e.reason
-        except Exception as e:  # network error
+        except Exception:  # network error
             time.sleep(delay)
             delay *= 2
-            last = repr(e)
     return 0, None, "gave up after retries"
 
 
@@ -158,13 +171,18 @@ def run(tickers: list[str], out: Path, start: dt.date, free_path: str = "C:\\") 
         status, payload, reason = fetch(t, p1, p2)
         if payload is not None:
             try:
-                rows = parse_chart(payload)
+                rows = drop_incomplete_today(parse_chart(payload), dt.datetime.now(dt.timezone.utc).date())
+                if not rows:
+                    raise ValueError("no data")
                 write_rows_atomic(out / (file_stem(t) + ".csv.gz"), rows)
                 append_atomic(mf, "%s\t%s\t%s\t%d" % (t, rows[0]["date"], rows[-1]["date"], len(rows)))
                 n_ok += 1
                 continue
             except ValueError as e:
                 reason = str(e)
+        if not is_permanent_miss(status, reason):
+            print("transient failure, not recorded: %s %s %s" % (t, status, reason))
+            continue
         append_atomic(ms, "%s\t%s\t%s" % (t, status, reason.replace("\t", " ").replace("\n", " ")))
         n_miss += 1
     print("ok=%d miss=%d" % (n_ok, n_miss))

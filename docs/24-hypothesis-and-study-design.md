@@ -1,5 +1,7 @@
 # 24 - Hypothesis and study design
 
+> **Status (October 14, 2026): updated by `38` (decisions D1 to D11) and `32` version 2.** The hurdle H = 0.70 on precision is retired as a pass/fail bar. The primary claim is now the expected net abnormal return of flagged ticker-days minus matched controls, with a two-way clustered bootstrap lower bound above zero. Precision and hit rate are descriptive; the live threshold is a data-derived break-even precision. Where the text below says "hit rate lower bound exceeds H", read it through `32` v2.
+
 October 13, 2026. Eli's framing: this is as much a research paper as an algorithm. We are testing a hypothesis, and we do not know in advance how much data a working model would need. This document makes that explicit and is the top-level frame for the other docs.
 
 ## The hypothesis
@@ -12,13 +14,13 @@ October 13, 2026. Eli's framing: this is as much a research paper as an algorith
 | Source universe | `U` | Which subreddits, entity kinds (stock, token, repo-to-company), and years we draw from | `20`, `22` |
 | Early call | `C` | Output: calibrated probability, interval, and action with margin over the hurdle | `18` |
 | Confidence level | `L` | Coverage of the interval, for example 95% | `04`, `18` |
-| Hurdle | `H` | Decision threshold: breakeven plus safety margin (default 0.70), and the profit criterion below | `07`, `10` |
+| Hurdle | `H` | Originally breakeven plus safety margin (0.70). Retired as a bar (`38` D1); now the net-edge-above-zero criterion and a data-derived break-even precision | `07`, `10`, `32` |
 
 **Null H0:** no (`S`, `U`) does better than the baselines (asset's own trailing return, repo-only features, base rate) once the search is accounted for.
 
 ## Two things that must both hold
 
-1. **Predictive claim:** precision of flagged posts, with its lower bound at level `L`, exceeds `H` and the baselines on sealed out-of-time data.
+1. **Predictive claim (reworded per `38` D1):** the net abnormal-return difference of flagged ticker-days versus matched controls has a one-sided lower bound above zero on sealed data. Precision is reported descriptively against the break-even precision, not against 0.70.
 2. **Profit claim:** simulated paper positions on those flags earn a net return above benchmark after costs and slippage, with a lower bound above zero and drawdown inside `10`. A good hit rate with a bad payoff does not count.
 
 Precision alone is not a profit indicator, so the second claim is separate and reported separately.

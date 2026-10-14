@@ -4,9 +4,11 @@ An experiment to find early signals in small Reddit communities: posts that came
 
 This is a research project, not investment advice. No personal money goes into it for a long while (see `07-decisions.md` and `10-risk-policy-and-budget.md`).
 
+> Reading order (D14): `07, 38, 24, 32, 28, 31, 25, 27, 37`.
+
 ## One-paragraph summary
 
-Mine historical Reddit for posts that mention something checkable. Phase 1 uses AI and developer tooling subreddits and GitHub repos, because outcomes are objective, free, and quick to resolve. For each mention, look up what happened afterward using outside data, and combine several noisy signals into a soft label. Train a regularized logistic regression on information that existed at posting time only, using older years for training and newer years for testing, with time-decay weights. Output a calibrated probability with an interval, and abstain when unsure. False positives are expensive, false negatives are fine. We are looking for trends in early indication, not claiming posts cause outcomes. Two tracks share one engine: GitHub tooling (primary) and crypto tokens with repos (a cheap kill test of the profit link). Stocks and options come later, behind stricter risk gates. If the profit link fails, the model still works as a tool radar for your own tools. Budget: $200 to build and $25 per month.
+Test whether posts in 14 finance-related subreddits, pulled as a full census from Arctic Shift (2012 to 2026), contain early signals about tickers. The unit is the ticker-day; stage 1 uses posts only, and price enters only through labels. The primary claim is that flagged ticker-days have a net abnormal return (10 days, after cost) whose lower bound exceeds matched controls. Live scoring uses the same conversion path as training. Research only, not investment advice. GitHub outcomes are deferred. Older docs describing the repo-first plan are kept as history.
 
 ## Files
 
@@ -40,13 +42,21 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `26-other-sources.md` | Other forums and sources beyond Reddit (candidates, scoring priors, first set, verification plan) |
 | `27-source-census-and-deleted-data.md` | Measured access and volume for other sources; whether removed Reddit bodies can be recovered (they cannot) |
 | `28-sample-size-levers.md` | Measured levers for raising sample size: ticker-days as the unit, comments, years, subs, projections |
+| `29-price-sources.md` | Free historical price sources probed, coverage and misses |
+| `30-gharchive-feasibility.md` | GH Archive and GitHub API feasibility (deferred track) |
+| `31-synthetic-power-results.md` | Synthetic power results (flag vs base rate check) |
+| `32-preregistration-draft.md` | Pre-registration v2 draft, not frozen |
+| `33-resolver-tuning.md` | Entity resolver tuning on real census posts |
+| `34-price-pull.md` | Yahoo chart price pull: how to run, misses |
+| `35-label-builder.md` | Label builder implementing the hit rule |
+| `36-ticker-day-counts.md` | Ticker-day counts (partial run) |
+| `37-label-and-evaluation-note.md` | Plain-language label and evaluation summary |
+| `38-review-decisions.md` | Review decisions D1 to D15 (authoritative) |
 
 ## Reading order
 
-`07-decisions.md`, then `01-plan.md`, then `11-data-collection-runbook.md`, then `08-open-questions.md` (the "Needs your input" section), then the rest as needed.
+`07, 38, 24, 32, 28, 31, 25, 27, 37` (D14). Then the rest as needed.
 
 ## Status
 
-**Data source:** the public git repo of Reddit data covering 2005 to 2026. See `11`.
-
-Planning only (data collection runbook, evaluation suite, and profit-link plan now written). Nothing has been downloaded or built yet. Numbers marked as assumptions in `05` and `10` are planning estimates, not measurements. Items marked "verified" in `03` and `09` were checked against live sources on October 13, 2026.
+Census running, code and docs built, no outcome data joined, no signal tested. Docs `01` to `23` describe the earlier repo-first framing and are history where they disagree with `07` and `38`.

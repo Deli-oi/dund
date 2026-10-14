@@ -162,7 +162,7 @@ class LabelTests(unittest.TestCase):
         cut = DATES.index(date(2023, 11, 3))
         s2 = mk("X", DATES[:cut + 1], s.close[:cut + 1])
         lab = label_event("X", self.TS, s2, b)
-        self.assertEqual(hit_label(lab), (None, "delisted_or_series_ended"))
+        self.assertEqual(hit_label(lab), (None, "series_ended_early"))
         self.assertIsNone(lab.windows[10].car)
         self.assertIsNotNone(lab.windows[1].car)
 
@@ -177,7 +177,7 @@ class LabelTests(unittest.TestCase):
     def test_post_after_series_end(self):
         s, b = world()
         lab = label_event("X", self.TS, mk("X", DATES[:100], s.close[:100]), b)
-        self.assertEqual(hit_label(lab), (None, "delisted_or_series_ended"))
+        self.assertEqual(hit_label(lab), (None, "series_ended_early"))
         self.assertTrue(lab.missing_price)
 
     def test_insufficient_placebo(self):
@@ -238,3 +238,52 @@ class DstCloseTest(unittest.TestCase):
         s = mk("X", ds, [10.0] * 5)
         i = entry_index(s, datetime(2021, 1, 5, 20, 30, tzinfo=timezone.utc))
         self.assertEqual(s.dates[i], date(2021, 1, 5))
+
+
+class EntryGapTest(unittest.TestCase):
+    def test_series_starting_years_after_post_gives_no_entry(self):
+        ds = [date(2021, 7, 12) + timedelta(days=i) for i in range(30) if (date(2021, 7, 12) + timedelta(days=i)).weekday() < 5]
+        s = mk("HTZ", ds, [10.0] * len(ds))
+        self.assertIsNone(entry_index(s, datetime(2015, 3, 2, 15, 0, tzinfo=timezone.utc)))
+
+    def test_long_weekend_gap_still_enters(self):
+        ds = [date(2021, 5, 25) + timedelta(days=i) for i in range(10)
+              if (date(2021, 5, 25) + timedelta(days=i)).weekday() < 5 and date(2021, 5, 25) + timedelta(days=i) != date(2021, 5, 31)]
+        s = mk("X", ds, [10.0] * len(ds))
+        i = entry_index(s, datetime(2021, 5, 29, 15, 0, tzinfo=timezone.utc))  # Saturday of Memorial Day weekend
+        self.assertEqual(s.dates[i], date(2021, 6, 1))
+
+
+class TestReview(unittest.TestCase):
+    def test_adjclose_alias_and_missing_dropped(self):
+        from dund.labels import series_from_rows
+        rows = [{"date": "2020-01-02", "close": "10", "adjclose": "5", "volume": "1"},
+                {"date": "2020-01-03", "close": "10", "adjclose": "", "volume": "1"},
+                {"date": "2020-01-06", "close": "10", "adj_close": "6", "volume": "1"}]
+        s = series_from_rows("X", rows)
+        self.assertEqual(s.adj_close, [5.0, 6.0])
+        self.assertEqual(len(s), 2)
+
+    def test_half_day_close(self):
+        from dund.labels import close_utc
+        self.assertEqual(close_utc(date(2023, 11, 24)).hour, 18)  # EST half day
+        self.assertEqual(close_utc(date(2023, 7, 3)).hour, 17)    # DST half day
+        self.assertEqual(close_utc(date(2023, 12, 25)).hour, 21)
+        self.assertEqual(close_utc(date(2022, 12, 24)).hour, 21)  # Saturday
+
+    def test_ended_early_vs_delisted(self):
+        s, b = world()
+        cut = DATES.index(date(2023, 11, 3))
+        px = list(s.close[:cut + 1])
+        px[-1] = px[-2] * 0.2
+        lab = label_event("X", datetime(2023, 10, 31, 12, tzinfo=UTC),
+                          mk("X", DATES[:cut + 1], px), b)
+        self.assertEqual(hit_label(lab), (None, "delisted"))
+
+    def test_future_events_not_in_placebo(self):
+        s, b = world(walk(len(DATES), 5))
+        ts = datetime.combine(DATES[300], datetime.min.time(), tzinfo=UTC)
+        fut = [DATES[i] for i in range(305, 400)]
+        a = label_event("X", ts, s, b, event_dates=[])
+        c = label_event("X", ts, s, b, event_dates=fut)
+        self.assertEqual(a.windows[10].n_placebo, c.windows[10].n_placebo)

@@ -1,5 +1,52 @@
 # 07 - Decisions so far
 
+## Current state (October 14, 2026, authoritative with `38`)
+
+- Source: Reddit via Arctic Shift census, 14 subs, 2012 to 2026 (`25`, `27`).
+- Tickers first; repo and GitHub outcomes are deferred (`30`).
+- Stage 1 is post-only; no comment pull for now (`28`).
+- Price enters through labels only, never as a feature (`35`, `38` D9).
+- Unit is the ticker-day (UTC date); decision time is 00:00 UTC next day (`38` D2).
+- Primary claim (D1): net abnormal return lower bound over matched controls, 10-day window, 20 bps cost.
+- Clustering is two-way (ticker and week); trial ladder at most 20 with Holm (D4, D6).
+- Live input conversion contract (D12): one code path, hashed feature spec, parity test.
+- Live prices free first; paid delisted data required before confirmatory (D10, USER decision).
+- GitHub outcomes deferred; pre-registration v2 lives in `32`, not frozen.
+- Laptop-first; raw data outside Dropbox (`C:\Users\dalele\dund-data`); `DUND_SALT` required.
+- Reading order: `07, 38, 24, 32, 28, 31, 25, 27, 37`.
+
+## Dated updates
+
+### October 14, 2026: census probe finding
+- Arctic Shift API pulls for the 14 subs run to `posts_v3`; paging uses an exclusive `after`, so the pager steps back one second and dedupes by id (`38` D15). QA compares monthly counts with an independent day sample. Ticker-day counts so far are partial (`36`).
+
+### October 14, 2026: review outcome
+- Four independent reviews (docs, data model and labels, statistics, code) led to `38`, the single source of truth. Older docs get a SUPERSEDED banner; nothing is deleted.
+
+### October 14, 2026: decisions in 38
+- D1 net-return claim, D2 ticker-day unit, D3 single 10-day window, D4 matched controls and two-way clustering, D5 purged splits, D6 trial ladder, D7 to D8 outcome-free gates and real-estimand power, D9 point-in-time allowlist, D10 coverage and delisted data, D11 removed bodies, D12 live input contract, D13 salt and privacy, D14 document policy, D15 census paging.
+
+## Archived early decisions (superseded October 14, 2026, see 38)
+
+- **Two tracks on one engine** (default). Track A (primary): AI and developer tooling with GitHub outcomes. Track B (cheap parallel test): crypto tokens that have repos, with no Reddit data. Stocks and options come later and only if a kill test passes. See `01`, `09`, `13`.
+  - Replaced by: tickers first, post-only stage 1 (`38`, `32`).
+- **Build budget $200, upkeep $25 per month.** Phase-1 LLM spend capped at $60 (default).
+  - Replaced by: laptop-first with free sources, paid delisted data a pending USER decision (`38` D10).
+- The $60 LLM cap covers the orchestrating agent's own tokens: data tasks capped at $15, orchestration at $35, reserve $10 (`10`, `11`).
+  - Replaced by: same as above (`38` D10).
+- Live data comes from a custom collector (PRAW with OAuth), not from the monthly dump.
+  - Replaced by: Arctic Shift census (`27`, `38`).
+- **Kill test K1 first** (default): does early GitHub growth precede abnormal returns in mapped assets, with placebo dates? A null result means "no large effect," given low power (`13`).
+  - Replaced by: net-return lower bound vs matched controls (`38` D1, `32`).
+- Phase 1 policy: weekly top-k review queue. Phase 2 policy (default): act only if the lower confidence bound on precision is at least breakeven plus 0.20, with a default payoff scenario of G = L = 100%, so the target is 0.70. Details in `10`.
+  - Replaced by: break-even precision margin (`38` D1).
+- Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
+  - Replaced by: Arctic Shift census of 14 subs, 2012-2026 (`38`, `25`).
+- Track B is in scope (stated). Agent billing: subscription preferred (stated). Hand-labeling budget: about 1 hour (stated). The agent does the pulls.
+  - Replaced by: tickers first; Track B and GitHub deferred (`38` section E).
+
+## Earlier decisions (history kept; where they conflict with the sections above, those win)
+
 What has been settled. Each item can be reopened. Items marked (default) were chosen by Claude on Eli's instruction to answer what it could, and can be overridden.
 
 ## Framing
@@ -10,12 +57,9 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 ## Scope and resources
 
-- **Two tracks on one engine** (default). Track A (primary): AI and developer tooling with GitHub outcomes. Track B (cheap parallel test): crypto tokens that have repos, with no Reddit data. Stocks and options come later and only if a kill test passes. See `01`, `09`, `13`.
 - AI/dev tooling was chosen because its outcomes are measurable and free, not because its market upside is proven. The profit link is unproven.
 - Seed subreddits: chosen from verified data (default). See `09`.
-- **Build budget $200, upkeep $25 per month.** Phase-1 LLM spend capped at $60 (default).
 - Hardware: the school laptop is for analysis and review. A second, older ThinkPad with more storage is dedicated to the collector and long pulls (specs pending). VPS stays as backup. Options in `08`.
-- The $60 LLM cap covers the orchestrating agent's own tokens: data tasks capped at $15, orchestration at $35, reserve $10 (`10`, `11`).
 - Huginn is not part of the plan.
 
 ## Labels and outcomes
@@ -44,7 +88,6 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 - **Risk averse.** False positives are very bad. False negatives are acceptable.
 - A missed positive noticed later is a useful hard example, not a loss.
 - Everything is risk adjusted, and **confidence scores are required in the final output**.
-- Phase 1 policy: weekly top-k review queue. Phase 2 policy (default): act only if the lower confidence bound on precision is at least breakeven plus 0.20, with a default payoff scenario of G = L = 100%, so the target is 0.70. Details in `10`.
 - Sizing (default): at most 1% of capital per alert and at most quarter Kelly, with the whole experiment limited to a small sleeve.
 - No money until the research, live, and money gates in `10` are met.
 
@@ -58,13 +101,11 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 ## Data collection
 
-- Live data comes from a custom collector (PRAW with OAuth), not from the monthly dump.
 - Arctic Shift is a secondary source.
 - Start the live collector early.
 
 ## Profit link, evaluation, and pivot
 
-- **Kill test K1 first** (default): does early GitHub growth precede abnormal returns in mapped assets, with placebo dates? A null result means "no large effect," given low power (`13`).
 - If the profit link fails, the engine stays as a **tool radar** feeding your own tools. The signal model never depends on the asset mapper, simulator, or dashboards (`01`, `13`).
 - Two dashboards (default Dash, `12`): the **Truth board** (honest accuracy: walk-forward, permutation tests, sealed test period unsealed once, trial counter, luck meter) and the **Sandbox** (acceptance line, all trades in a period, industry filter, sort keys). Build the harness on synthetic data first.
 - POC extraction is **link-only** (GitHub URLs), no name-based extraction.
@@ -91,7 +132,7 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 ## Subreddit waves (October 13, 2026)
 
-- Scan in waves by a scored prior, not all 86 at once. Wave 1 is about 23 subs plus controls. More waves are added only if projected data is short. Scores are priors until R0 counts exist. See `20`.
+- Scan in waves by a scored prior, not all 86 at once. Wave 1 is the 14-sub census (see `25`, `38`); the earlier "about 23 subs" figure is superseded. More waves are added only if projected data is short. Scores are priors until R0 counts exist. See `20`.
 
 ## Subreddit as a variable (October 13, 2026)
 
@@ -127,9 +168,7 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 ## Reddit access (new)
 
-- Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
 - Optional live API read of chosen subreddits, about daily, scored by the frozen model. Rules in `11`.
-- Track B is in scope (stated). Agent billing: subscription preferred (stated). Hand-labeling budget: about 1 hour (stated). The agent does the pulls.
 
 ## Process
 

@@ -46,6 +46,14 @@ Run on the training table versus a **live sample** (the first weeks of the live 
 | Adversarial validation | Train a classifier to tell train rows from live rows using the features | AUC near 0.5. A high AUC lists the features that differ, and those are the drift suspects |
 | Label base rate by year and sub | Positive rate per stratum with intervals | No unexplained jumps |
 
+### Reporting rules added October 14, 2026 (D9, D10, D11, `38`)
+
+| Rule | Report |
+|---|---|
+| Point-in-time (D9) | State, per feature, its `known_at`. Fields excluded or audit-only (removal fields, `edited`, flair, subscriber counts, score and comment counts, karma) are listed with the reason and are not used as features. Posts with `edited` set are dropped from training and flagged live |
+| Removed bodies (D11) | Hit rate and mean net return by removed status; models fit with and without removed-body rows; removed share per sub-month as a covariate, not a feature |
+| Unobservable share (D10) | Resolved share and unobservable share (no valid price series at the mention date, or ticker not in the snapshot table) by year and by sub. Never silently dropped from the headline: bound precision and mean return by worst-case imputation (unobservable as miss, then as hit) and list the share per year |
+
 If a check fails, the first response is to **fix the pull or reweight**, not to tune the model.
 
 ## Weights and strata when we cannot fix the sample
