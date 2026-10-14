@@ -75,3 +75,12 @@ Status legend: [ ] todo, [x] done. Gate means stop and ask Eli.
 
 ### T12. Optional Reddit daily reader
 - Optional live read of new posts, scored by the frozen model. Case file per `docs/11`.
+
+### Status update, October 14, 2026
+- [x] T1c unblocked and done in part: `src/dund/schema.py`, `transform.py` (parity test), `entities.py` (resolver, SEC ticker table).
+- [x] T2 synthetic harness: `src/dund/synth.py`, `scripts/power_sim.py`, results in `docs/31`.
+- [ ] Census: `scripts/census_posts.py` running to `posts_v3` (2012-01 to 2026-09, 14 subs). Check `scripts/field_coverage.py` per year as files land.
+- [ ] Tune the resolver on real census posts (blocklists, aliases, share classes).
+- [ ] Prices: live tickers via free source (`docs/29`), log every miss. Later: cheap paid history with delisted names.
+- [ ] Freeze pre-registration (`docs/32`) before any outcome join.
+- Deferred: GitHub-star outcomes (`docs/30`), comment pull (event type only, `docs/28`), VIC.

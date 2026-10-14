@@ -117,6 +117,14 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - A one-month census of 14 subs was pulled through the Arctic Shift API (about 16,800 posts). Findings and plan changes in `25`. No signal tests were run.
 
+## Focus on tickers; live-ticker prices first (October 14, 2026)
+
+- **Stock side only for now.** Repo and GitHub-star outcomes (GH Archive, BigQuery) are deferred until the ticker side shows any signal. See `30`.
+- **Prices:** start with live (still-listed) tickers from free sources. Delisted names are missing, so the first pass is exploratory and carries a survivorship caveat. A cheap paid historical dataset with delisted coverage is planned for before the confirmatory phase. Not yet priced. See `29`.
+- **Comment-introduced tickers** (a comment names a ticker the post did not) are kept as a later event type, dated at the comment, not the post. Measured at about 4% of posts in a small sample. Build after the resolver runs on real census data. See `28`.
+- **Pre-registration:** draft with nine default decisions in `32`. Not frozen. Freeze before any outcome data is joined.
+- **Census:** full-history post pull for 14 subs running into `posts_v3` under the local dund-data folder. Raw data stays outside Dropbox and out of git.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
