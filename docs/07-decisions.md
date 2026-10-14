@@ -109,6 +109,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - No evidence yet for where signals live. Scores in `20` only order the work. Data need is much larger than first estimated, with a pre-registered detection test and kill criteria. See `23`.
 
+## Research framing (October 13, 2026)
+
+- The project is a hypothesis test as much as an algorithm. H1: some x in y gives output c with hit-rate lower bound at confidence j above threshold k and baselines, plus a separate profit claim. Exploratory, confirmatory, replication phases; verdicts supported, not supported, or underpowered. See `24`.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
