@@ -9,6 +9,7 @@ Months run in the order 2019, 2020, 2018, 2021, 2017, 2022, ... (pre-2021 first,
 """
 import calendar
 import gzip
+import http.client
 import json
 import os
 import shutil
@@ -49,7 +50,7 @@ def get(params):
                 time.sleep(10 * (attempt + 1))
             else:
                 raise
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException, OSError, ValueError):
             time.sleep(10 * (attempt + 1))
     raise RuntimeError("giving up: " + url)
 
