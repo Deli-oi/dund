@@ -34,6 +34,7 @@ Mine historical Reddit for posts that mention something checkable. Phase 1 uses 
 | `20-subreddit-prioritization.md` | Scored ranking of the 86 candidate subs, waves, data-need math, override rules |
 | `21-cost-estimate.md` | Total build and recurring cost ranges, cost drivers |
 | `22-representativeness-and-sampling.md` | Census pull rules, skew sources, train-versus-live checks, reweighting |
+| `23-data-need-reassessment.md` | Power math, revised data need, explore-first plan, kill criteria |
 
 ## Reading order
 

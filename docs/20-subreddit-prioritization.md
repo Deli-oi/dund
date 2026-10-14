@@ -2,6 +2,8 @@
 
 Written October 13, 2026. Answers "do we need to monitor all of those?" No. This ranks the 86 subreddits in `19` by an estimated likelihood of containing a real early indicator, then sets how many to scan from how much training data we need. **Every score is my prior, not a measurement.** None of these subs has been pulled or profiled. Wave membership gets revised after the first counts (`14` section 5).
 
+> **Superseded in part by `23`:** the scores are priors that only order the first look, and the data-need figure below is a lower bound.
+
 ## Scoring rubric (1 to 5 each, then 0 to 100)
 
 | Factor | Weight | 5 means |

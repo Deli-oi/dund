@@ -105,6 +105,10 @@ What has been settled. Each item can be reopened. Items marked (default) were ch
 
 - Good-example hunting informs which variables to build and gives an evaluation slice. It does not define the training sample. One transform path serves training and live input, with a parity test. See `22`, `15`.
 
+## Explore first, then test (October 13, 2026)
+
+- No evidence yet for where signals live. Scores in `20` only order the work. Data need is much larger than first estimated, with a pre-registered detection test and kill criteria. See `23`.
+
 ## Reddit access (new)
 
 - Reddit history comes from the public git repo covering 2005 to 2026, filtered to the seed subreddits (`11`). Reddit data is used for training.
